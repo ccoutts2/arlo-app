@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  email      String   @unique
+  givenName  String
+  familyName String
+
+  pets       Pet[]
+}
+
+model Pet {
+  id        Int         @id @default(autoincrement())
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  name      String
+
+  ownerId   String
+  owner     User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  reminders Reminders[]
+}
+
+model Reminders {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  title        String
+  description  String
+
+  reminderDate DateTime
+
+  frequency    ReminderFrequency
+
+  petId        Int
+  pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  reminderInstances ReminderInstance[]
+}
+
+model ReminderInstance {
+  id Int @id @default(autoincrement())
+  completedAt    DateTime @default(now())
+
+  reminderId    Int
+  reminder      Reminders @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+
+}
+
+
+enum ReminderFrequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
