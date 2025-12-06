@@ -26,10 +26,17 @@ model User {
 }
 
 model Pet {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   name      String
+  breed     String
+  weight    Int?
+  birthday  DateTime?
+  sex       String?
+  neutered  Boolean?
+  allergies String?
+  image     String?
 
   ownerId   String
   owner     User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
