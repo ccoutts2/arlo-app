@@ -14,21 +14,21 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  email      String   @unique
+  email      String @unique
   givenName  String
   familyName String
 
-  pets       Pet[]
+  pets Pet[]
 }
 
 model Pet {
-  id        Int         @id @default(autoincrement())
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   name      String
 
   ownerId   String
@@ -37,30 +37,28 @@ model Pet {
 }
 
 model Reminders {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  title        String
-  description  String
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  description String
 
   reminderDate DateTime
 
-  frequency    ReminderFrequency
+  frequency ReminderFrequency
 
-  petId        Int
-  pet          Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  petId             Int
+  pet               Pet                @relation(fields: [petId], references: [id], onDelete: Cascade)
   reminderInstances ReminderInstance[]
 }
 
 model ReminderInstance {
-  id Int @id @default(autoincrement())
-  completedAt    DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  completedAt DateTime @default(now())
 
-  reminderId    Int
-  reminder      Reminders @relation(fields: [reminderId], references: [id], onDelete: Cascade)
-
+  reminderId Int
+  reminder   Reminders @relation(fields: [reminderId], references: [id], onDelete: Cascade)
 }
-
 
 enum ReminderFrequency {
   ONCE

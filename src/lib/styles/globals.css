@@ -1,0 +1,12 @@
+@import '@acab/reset.css';
+
+html {
+    background-color: #ece4e1;
+    color: #353535;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
