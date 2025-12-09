@@ -67,6 +67,13 @@ model ReminderInstance {
   reminder   Reminders @relation(fields: [reminderId], references: [id], onDelete: Cascade)
 }
 
+model Session {
+  id             String   @id
+  createdAt      DateTime
+  secretHash     Bytes
+  lastVerifiedAt DateTime
+}
+
 enum ReminderFrequency {
   ONCE
   DAILY
