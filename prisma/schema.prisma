@@ -22,7 +22,8 @@ model User {
   givenName  String
   familyName String
 
-  pets Pet[]
+  pets     Pet[]
+  sessions Session[]
 }
 
 model Pet {
@@ -68,10 +69,11 @@ model ReminderInstance {
 }
 
 model Session {
-  id             String   @id
-  createdAt      DateTime
-  secretHash     Bytes
-  lastVerifiedAt DateTime
+  id        String   @id
+  expiresAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 enum ReminderFrequency {
