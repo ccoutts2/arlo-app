@@ -1,5 +1,7 @@
 import { hashPassword } from '$lib/server/password';
 import prisma from '$lib/server/prisma';
+import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/server/session';
+import type { User } from '../../../../../prisma/src/generated/prisma/client';
 import type { PageServerLoad } from './$types';
 import { redirect, type Actions } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
@@ -14,8 +16,12 @@ const schema = z.object({
     password: z.string().min(8, "Password is not long enough.")
 })
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({locals}) => {
     const form = await superValidate(zod4(schema));
+
+    if (locals.session !== null && locals.user !== null) {
+        return redirect(302, "/")
+    }
 
     return {
         form
@@ -23,11 +29,12 @@ export const load: PageServerLoad = async () => {
 }
 
 export const actions = {
-	default: async ({ request }) => {
+	default: async (event) => {
 
-        const form = await superValidate(request, zod4(schema));
+        const form = await superValidate(event.request, zod4(schema));
 
         const email = form.data.email;
+        let user: User;
 
         const passwordHash = await hashPassword(form.data.password);
 
@@ -56,7 +63,7 @@ export const actions = {
 				);
 			}
 
-            await prisma.user.create({
+            user = await prisma.user.create({
                 data: {
                     givenName: form.data.givenName,
                     familyName: form.data.familyName,
@@ -64,6 +71,7 @@ export const actions = {
                     password: passwordHash
                 }
             })
+
 
         } catch (error) {
             console.log(error);
@@ -78,6 +86,10 @@ export const actions = {
 				}
 			);
         }
+
+        const sessionToken = await generateSessionToken();
+	    const session = await createSession(sessionToken, user.id);
+	    await setSessionTokenCookie(event, sessionToken, session!.expiresAt);
 
         return redirect(302, "/")
 
