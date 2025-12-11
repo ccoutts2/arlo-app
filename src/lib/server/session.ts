@@ -1,5 +1,5 @@
 import type { User } from '../../../prisma/src/generated/prisma/client';
-import type { RequestEvent } from '../../routes/(app)/$types';
+import type { RequestEvent } from "@sveltejs/kit";
 import prisma from './prisma';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";

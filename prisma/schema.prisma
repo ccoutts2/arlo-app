@@ -21,6 +21,7 @@ model User {
   email      String @unique
   givenName  String
   familyName String
+  password   String
 
   pets     Pet[]
   sessions Session[]
