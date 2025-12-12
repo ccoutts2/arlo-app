@@ -5,14 +5,17 @@
 	import type { Snippet } from 'svelte';
 	import Footer from '$lib/components/Footer.svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { children, data }: { children: Snippet; data: any } = $props();
+
+	const pets = data.pets;
+	const user = data.user;
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<Header />
+<Header {pets} {user} />
 {@render children?.()}
 
 <Footer />

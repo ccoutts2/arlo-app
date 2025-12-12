@@ -1,11 +1,10 @@
-import { hashPassword, verifyPasswordHash } from '$lib/server/password';
+import { verifyPasswordHash } from '$lib/server/password';
 import prisma from '$lib/server/prisma';
 import type { PageServerLoad } from './$types';
 import { redirect, type Actions } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { z } from 'zod/v4';
-import type { User } from '../../../../../prisma/src/generated/prisma/client';
 import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/server/session';
 
 

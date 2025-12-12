@@ -16,22 +16,28 @@
 
 			<div>
 				<label for="givenName"></label>
-				<input type="text" id="givenName" name="givenName" bind:value={$form.givenName} />
+				<input type="text" id="givenName" name="givenName" required bind:value={$form.givenName} />
 			</div>
 			<div>
 				<label for="familyName"></label>
-				<input type="text" id="familyName" name="familyName" bind:value={$form.familyName} />
+				<input
+					type="text"
+					id="familyName"
+					name="familyName"
+					required
+					bind:value={$form.familyName}
+				/>
 			</div>
 		</fieldset>
 
 		<div>
 			<label for="email"></label>
-			<input type="email" id="email" name="email" bind:value={$form.email} />
+			<input type="email" id="email" name="email" required bind:value={$form.email} />
 		</div>
 
 		<div>
 			<label for="password"></label>
-			<input type="password" id="password" name="password" bind:value={$form.password} />
+			<input type="password" id="password" name="password" required bind:value={$form.password} />
 		</div>
 
 		<button type="submit">Create Account</button>

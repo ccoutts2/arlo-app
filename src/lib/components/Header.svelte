@@ -1,32 +1,27 @@
 <script lang="ts">
+	let { user, pets } = $props();
 </script>
 
 <header class="Header">
 	<div class="Header__profile">
-		<p>Hello, name</p>
+		<p>Hello, {user}</p>
 		<div>
 			<button>Open Menu</button>
 		</div>
 	</div>
 
 	<ul class="Header__pets">
-		<li class="Header__pet">Arlo</li>
-		<li class="Header__pet">Indie</li>
-		<li class="Header__pet">Millie</li>
-		<li class="Header__pet">Beff</li>
-		<li class="Header__pet">Inlo</li>
-		<li class="Header__pet">Daisy</li>
-		<li class="Header__pet">Pasff</li>
-		<li class="Header__pet">Patch</li>
-		<li class="Header__pet">Noris</li>
+		{#each pets as { name }}
+			<li class="Header__pet">{name}</li>
+		{/each}
 	</ul>
 </header>
 
 <style lang="scss">
 	.Header {
+		align-items: flex-start;
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
 		padding: 1rem;
 		position: relative;
 

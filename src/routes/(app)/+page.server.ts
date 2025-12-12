@@ -14,10 +14,16 @@ const schema = z.object({
     frequency: z.string().min(1, "You must select a frequency.")
 });
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
     const form = await superValidate(zod4(schema));
+    const ownderId = locals.user?.id;
+
+    const pets = await prisma.pet.findMany({
+        where: { ownerId: ownderId }
+    })
 
     return {
-        form
+        form,
+        pets
     }
 }

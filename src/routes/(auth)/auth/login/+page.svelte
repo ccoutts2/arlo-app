@@ -13,11 +13,11 @@
 	<form method="POST" use:enhance>
 		<div>
 			<label for="email"> Email </label>
-			<input type="email" id="email" name="email" bind:value={$form.email} />
+			<input type="email" id="email" name="email" required bind:value={$form.email} />
 		</div>
 		<div>
 			<label for="password"> Password </label>
-			<input type="password" id="password" name="password" bind:value={$form.password} />
+			<input type="password" id="password" name="password" required bind:value={$form.password} />
 		</div>
 
 		<button type="submit">Login</button>
