@@ -29,10 +29,11 @@
 			<label for="birthday">Birthday</label>
 			<input type="date" id="birthday" name="birthday" bind:value={$form.birthday} />
 		</div>
-		<div>
-			<label for="sex">Sex</label>
-			<input type="text" id="sex" name="sex" bind:value={$form.sex} />
-		</div>
+		<select id="sex" name="sex" bind:value={$form.sex}>
+			<option value="">Select Sex (Optional)</option>
+			<option value="Female">Female</option>
+			<option value="Male">Male</option>
+		</select>
 		<RadioGroup name="neutured" legend="Neutered">
 			<RadioGroupOption
 				label="Yes"
@@ -60,14 +61,15 @@
 
 		<button type="submit">Add</button>
 		{#if $message}
-			<p>{$message.message}</p>
+			<p>{$message.text}</p>
 		{/if}
 	</form>
 </main>
 
 <style lang="scss">
 	input,
-	textarea {
+	textarea,
+	select {
 		background-color: white;
 	}
 </style>

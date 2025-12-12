@@ -12,10 +12,7 @@ const schema = z.object({
     name: z.string().min(1, "Please enter a name."),
     breed: z.string().min(1, "Please enter a breed."),
     weight: z.number().optional(),
-    birthday: z.preprocess(
-        (a) => (a === '' ? undefined : a),
-        z.coerce.date().optional()
-    ),
+    birthday: z.coerce.date(),
     sex: z.enum(['Female', 'Male']).optional(),
     neutered: z.string().optional(),
     allergies: z.string().optional(),
@@ -47,10 +44,10 @@ export const actions = {
             return redirect(302, "/auth/login")
         }
 
-        const file = form.data.image as File;
+        const file = form.data.image;
         let imageUrl; 
 
-       if (file && file.size > 0) {
+       if (file instanceof File && file.size > 0) {
             try {
                 const uploadedBlob = await put(file.name, file, {
                     access: 'public',
@@ -94,5 +91,7 @@ export const actions = {
 
             )
         }
+
+       return  message(form, { text: 'Pet added successfully!' })
     }
 } satisfies Actions;
