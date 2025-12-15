@@ -11,8 +11,8 @@
 	</div>
 
 	<ul class="Header__pets">
-		{#each pets as { name }}
-			<li class="Header__pet">{name}</li>
+		{#each pets as { id, name }}
+			<li class="Header__pet"><a href="/pet/{id}">{name}</a></li>
 		{/each}
 	</ul>
 </header>

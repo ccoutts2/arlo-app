@@ -50,7 +50,7 @@ model Reminders {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   title       String
-  description String
+  description String?
 
   reminderDate DateTime
 
@@ -63,8 +63,9 @@ model Reminders {
 
 model ReminderInstance {
   id          Int      @id @default(autoincrement())
-  completedAt DateTime @default(now())
-
+  completedAt DateTime?
+  scheduledAt DateTime
+  
   reminderId Int
   reminder   Reminders @relation(fields: [reminderId], references: [id], onDelete: Cascade)
 }
