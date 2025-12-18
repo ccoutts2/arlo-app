@@ -7,91 +7,87 @@ import { z } from 'zod/v4';
 import { put } from '@vercel/blob';
 import { BLOB_READ_WRITE_TOKEN } from '$env/static/private';
 
-
 const schema = z.object({
-    name: z.string().min(1, "Please enter a name."),
-    breed: z.string().min(1, "Please enter a breed."),
-    weight: z.number().optional(),
-    birthday: z.coerce.date(),
-    sex: z.enum(['Female', 'Male']).optional(),
-    neutered: z.string().optional(),
-    allergies: z.string().optional(),
-    image: z.instanceof(File).optional(),
-})
+	name: z.string().min(1, 'Please enter a name.'),
+	breed: z.string().min(1, 'Please enter a breed.'),
+	weight: z.number().optional(),
+	birthday: z.coerce.date(),
+	sex: z.enum(['Female', 'Male']).optional(),
+	neutered: z.string().optional(),
+	allergies: z.string().optional(),
+	image: z.instanceof(File).optional()
+});
 
 export const load: PageServerLoad = async () => {
-    const form = await superValidate(zod4(schema));
+	const form = await superValidate(zod4(schema));
 
-    return {
-        form
-    }
-}
-
+	return {
+		form
+	};
+};
 
 export const actions = {
-    default: async ({request, locals}) => {
-        const form = await superValidate(request, zod4(schema));
-        const ownerId = locals.user?.id;
+	default: async ({ request, locals }) => {
+		const form = await superValidate(request, zod4(schema));
+		const ownerId = locals.user?.id;
 
-           if (!form.valid) {
+		if (!form.valid) {
 			return message(form, {
 				status: 'invalid',
 				text: 'Form was invalid. Please check the form for errors.'
 			});
 		}
 
-        if (!ownerId) {
-            return redirect(302, "/auth/login")
-        }
+		if (!ownerId) {
+			return redirect(302, '/auth/login');
+		}
 
-        const file = form.data.image;
-        let imageUrl; 
+		const file = form.data.image;
+		let imageUrl;
 
-       if (file instanceof File && file.size > 0) {
-            try {
-                const uploadedBlob = await put(file.name, file, {
-                    access: 'public',
-                    addRandomSuffix: true,
-                    token: BLOB_READ_WRITE_TOKEN,
-                });
-                imageUrl = uploadedBlob.url;
-            } catch (error) {
-                 console.log(error);
-                 return message(form, { status: 'error', text: 'Failed to upload image.' }, { status: 500 });
-            }
-        }
+		if (file instanceof File && file.size > 0) {
+			try {
+				const uploadedBlob = await put(file.name, file, {
+					access: 'public',
+					addRandomSuffix: true,
+					token: BLOB_READ_WRITE_TOKEN
+				});
+				imageUrl = uploadedBlob.url;
+			} catch (error) {
+				console.log(error);
+				return message(form, { status: 'error', text: 'Failed to upload image.' }, { status: 500 });
+			}
+		}
 
-        try {
+		try {
+			await prisma.pet.create({
+				data: {
+					name: form.data.name,
+					breed: form.data.breed,
+					weight: form.data.weight,
+					birthday: form.data.birthday,
+					sex: form.data.sex,
+					neutered: form.data.neutered === 'yes',
+					allergies: form.data.allergies,
+					image: imageUrl,
+					ownerId: ownerId
+				}
+			});
+		} catch (error) {
+			console.log(error);
 
-            await prisma.pet.create({
-                data: {
-                    name: form.data.name,
-                    breed: form.data.breed,
-                    weight: form.data.weight,
-                    birthday: form.data.birthday,
-                    sex: form.data.sex,
-                    neutered: form.data.neutered === 'yes',
-                    allergies: form.data.allergies,
-                    image: imageUrl,
-                    ownerId: ownerId
-                }
-            })
-
-        } catch(error) {
-            console.log(error);
-            
-            return message(form,
+			return message(
+				form,
 				{
 					status: 'error',
 					text: 'Something went wrong. Please try again.'
 				},
 				{
 					status: 500
-				},
+				}
+			);
+		}
 
-            )
-        }
-
-       return  message(form, { text: 'Pet added successfully!' })
-    }
+		return message(form, { text: 'Pet added successfully!' });
+	}
 } satisfies Actions;

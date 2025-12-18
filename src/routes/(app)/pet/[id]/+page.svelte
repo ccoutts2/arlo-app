@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	let { data } = $props();
-	import { format, formatISO } from 'date-fns';
+	import { format } from 'date-fns';
 
 	const petDetails = $derived(data.petDetails);
 
@@ -52,7 +53,34 @@
 		</dl>
 		<section class="Pet__reminders">
 			<h2>Reminders</h2>
-			<ul></ul>
+			<ul class="Reminders">
+				{#each petDetails.reminders as reminder}
+					<li class="Reminders__item">
+						<article class="Reminders__card">
+							<header>
+								<h3>{reminder.title}</h3>
+								<form method="POST" use:enhance>
+									<input type="hidden" name="reminderId" value={reminder.id} />
+									<button
+										name="delete"
+										type="submit"
+										onclick={(e) =>
+											!confirm('This will remove this from the reminders?') && e.preventDefault()}
+									>
+										Check off reminder!
+									</button>
+								</form>
+							</header>
+
+							<p>{reminder.description}</p>
+							<footer>
+								<span>{reminder.frequency}</span>
+								<span>{reminder.reminderDate}</span>
+							</footer>
+						</article>
+					</li>
+				{/each}
+			</ul>
 		</section>
 	</main>
 {/if}

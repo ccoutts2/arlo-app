@@ -8,9 +8,15 @@
 	],
 	"overrides": [
 		{
-			"files": "*.svelte",
+			"files": ["*.svelte", "+page.svelte", "+layout.svelte"],
 			"options": {
-				"parser": "svelte"
+			"parser": "svelte"
+			}
+		},
+		{
+			"files": ["*.ts", "+page.server.ts", "+layout.server.ts", "+server.ts"],
+			"options": {
+			"parser": "typescript"
 			}
 		}
 	]
