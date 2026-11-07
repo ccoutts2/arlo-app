@@ -1,0 +1,69 @@
+// Lead: dog care reminders, training and a shared household log.
+// Each phase adds its models in its own migration.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  email      String   @unique
+  givenName  String
+  familyName String?
+  password   String
+
+  sessions    Session[]
+  memberships HouseholdMember[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Household {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  timezone  String   @default("Europe/London")
+
+  members HouseholdMember[]
+}
+
+enum HouseholdRole {
+  OWNER
+  MEMBER
+}
+
+model HouseholdMember {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  role        HouseholdRole @default(MEMBER)
+  householdId String
+  household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, userId])
+  @@index([userId])
+}
+
+// Failed sign-in attempts per email, for rate limiting (serverless-safe, no in-memory state).
+model LoginThrottle {
+  email       String   @id
+  failures    Int      @default(0)
+  windowStart DateTime @default(now())
+  lockedUntil DateTime?
+}
