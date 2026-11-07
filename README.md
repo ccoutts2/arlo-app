@@ -1,38 +1,31 @@
-# sv
+# Lead
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Your dog's reminders, training and log, shared with your household. An installable PWA (iPhone first), built with SvelteKit 5, Tailwind v4, Prisma 7 on Neon, and Vercel.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Setup
 
 ```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+npm install
+npx vercel link            # project: arlo-app
+npx vercel env pull .env.local   # Development env = the DEV database and dev Blob store
 ```
 
-## Developing
+`.prod-host` (git-ignored) holds the production database endpoint id. `scripts/guard-dev-db.mjs` uses it to refuse migrations or tests against production.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Scripts
 
-```sh
-npm run dev
+| Command              | What it does                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`        | Dev server                                                                                                                             |
+| `npm run check`      | Generate the Prisma client, then type-check                                                                                            |
+| `npm run db:migrate` | Create and apply a migration on the **dev** database (guarded)                                                                         |
+| `npm run db:deploy`  | Apply pending migrations (used for production on deploy)                                                                               |
+| `npm run test:unit`  | Vitest                                                                                                                                 |
+| `npm run test:e2e`   | Playwright on a production build against the **dev** database (guarded). Test users use `@lead.test` emails and are removed afterwards |
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Databases
 
-## Building
+- **lead-prod**: Vercel Production environment.
+- **lead-dev**: Vercel Development and Preview environments, and local `.env.local`.
 
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Nothing is ever deleted from production without explicit sign-off.

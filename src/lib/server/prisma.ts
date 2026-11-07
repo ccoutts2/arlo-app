@@ -1,13 +1,14 @@
-import { PrismaClient } from '../../../prisma/src/generated/prisma/client';
-import { DATABASE_URL } from '$env/static/private';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '$lib/server/generated/prisma/client';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { env } from '$env/dynamic/private';
 
-const adapter = new PrismaPg({
-	connectionString: DATABASE_URL,
-});
+// One client per server instance. The Neon adapter suits Vercel's serverless functions.
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-const prisma = new PrismaClient({
-	adapter,
-});
+export const prisma =
+	globalForPrisma.prisma ??
+	new PrismaClient({ adapter: new PrismaNeon({ connectionString: env.DATABASE_URL }) });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
