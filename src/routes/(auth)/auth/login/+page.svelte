@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { superForm } from 'sveltekit-superforms';
+	import { page } from '$app/state';
 	import Field from '$lib/components/Field.svelte';
 
 	let { data } = $props();
@@ -38,7 +39,11 @@
 	</form>
 </section>
 <p class="text-center">
-	New here? <a class="font-bold underline underline-offset-4" href={resolve('/auth/signup')}
+	New here?
+	<!-- Keeps ?invite=… when switching between sign-up and log-in. -->
+	<!-- eslint-disable svelte/no-navigation-without-resolve -->
+	<a class="font-bold underline underline-offset-4" href={resolve('/auth/signup') + page.url.search}
 		>Create an account</a
 	>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 </p>

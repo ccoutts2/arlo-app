@@ -21,4 +21,11 @@ if (host === prodHost) {
 	console.error('guard-dev-db: DATABASE_URL points at PRODUCTION. Aborting.');
 	process.exit(1);
 }
-console.log(`guard-dev-db: ok (${host} is not production)`);
+const token = process.env.BLOB_READ_WRITE_TOKEN ?? '';
+const store = token.match(/^vercel_blob_rw_([A-Za-z0-9]+)_/)?.[1];
+const prodStore = fs.existsSync('.prod-blob-store') ? fs.readFileSync('.prod-blob-store', 'utf8').trim() : null;
+if (store && (!prodStore || store === prodStore)) {
+	console.error('guard-dev-db: BLOB_READ_WRITE_TOKEN may be the PRODUCTION store. Aborting.');
+	process.exit(1);
+}
+console.log(`guard-dev-db: ok (${host} and blob store ${store ?? 'none'} are not production)`);

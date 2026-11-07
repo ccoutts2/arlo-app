@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { testEmail } from './db';
-
-const PASSWORD = 'correct-horse-battery';
+import { PASSWORD } from './helpers';
 
 async function signUp(page: Page, name = 'Chris') {
 	const email = testEmail(name.toLowerCase());
@@ -56,7 +55,7 @@ test('tabs navigate, household lists you, log out and back in', async ({ page })
 	await page.getByRole('link', { name: 'Household' }).click();
 	await expect(page).toHaveURL('/household');
 	await expect(page.getByText('Alex (you)')).toBeVisible();
-	await expect(page.getByText('Alex’s household')).toBeVisible();
+	await expect(page.getByLabel('Household name')).toHaveValue('Alex’s household');
 	for (const [name, url] of [
 		['Log', '/log'],
 		['Dogs', '/pets'],

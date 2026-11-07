@@ -5,9 +5,17 @@ import prisma from '$lib/server/prisma';
 import { hashPassword } from '$lib/server/password';
 import { startSession } from '$lib/server/session';
 import { signupSchema } from '$lib/schemas/auth';
+import { findInvite } from '$lib/server/invites';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => ({ form: await superValidate(zod4(signupSchema)) });
+export const load: PageServerLoad = async ({ url }) => {
+	const token = url.searchParams.get('invite');
+	const invite = token ? await findInvite(token) : null;
+	return {
+		form: await superValidate(zod4(signupSchema)),
+		joining: invite ? invite.household.name : null
+	};
+};
 
 export const actions = {
 	default: async (event) => {
@@ -20,17 +28,23 @@ export const actions = {
 			return message(form, 'That email already has an account. Log in instead.', { status: 400 });
 		}
 
+		const token = event.url.searchParams.get('invite');
+		const invite = token ? await findInvite(token) : null;
 		const user = await prisma.user.create({
 			data: {
 				givenName,
 				email,
 				password: await hashPassword(password),
-				// Everyone starts with their own household; partners join it by invite.
+				// Invited people join that household; everyone else starts their own.
 				memberships: {
-					create: { role: 'OWNER', household: { create: { name: `${givenName}’s household` } } }
+					create: invite
+						? { role: 'MEMBER', householdId: invite.householdId }
+						: { role: 'OWNER', household: { create: { name: `${givenName}’s household` } } }
 				}
 			}
 		});
+		if (invite)
+			await prisma.invite.update({ where: { id: invite.id }, data: { uses: { increment: 1 } } });
 
 		await startSession(event, user.id);
 		redirect(303, '/');
