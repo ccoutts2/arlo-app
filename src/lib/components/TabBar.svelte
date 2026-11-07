@@ -13,7 +13,18 @@
 		}
 	];
 
+	let { late = 0 }: { late?: number } = $props();
 	const active = $derived(tabs.findIndex((t) => t.match(page.url.pathname)));
+
+	// The app-icon badge on the home screen (iOS 16.4+ when installed, Chrome desktop).
+	$effect(() => {
+		const nav = navigator as Navigator & {
+			setAppBadge?: (n: number) => Promise<void>;
+			clearAppBadge?: () => Promise<void>;
+		};
+		if (late > 0) nav.setAppBadge?.(late).catch(() => {});
+		else nav.clearAppBadge?.().catch(() => {});
+	});
 </script>
 
 <!-- The bar persists across pages (it lives in the layout), so the pill slides with a plain CSS transition. -->
@@ -33,9 +44,14 @@
 		<a
 			href={resolve(tab.href)}
 			aria-current={i === active ? 'page' : undefined}
-			class="label relative z-10 rounded-full py-3 text-center text-sm font-semibold {i === active
+			class="label relative z-10 min-w-0 rounded-full py-3 text-center text-[clamp(0.75rem,3.4vw,0.875rem)] font-semibold {i ===
+			active
 				? 'text-ink'
-				: 'text-paper/70 hover:bg-paper/10 hover:text-paper'}">{tab.label}</a
+				: 'text-paper/70 hover:bg-paper/10 hover:text-paper'}"
+			>{tab.label}{#if i === 0 && late > 0}<span
+					class="absolute top-1 right-[calc(50%-38px)] grid h-5 min-w-5 place-items-center rounded-full bg-late px-1 text-[0.6875rem] font-bold text-white"
+					aria-label="{late} late">{late}</span
+				>{/if}</a
 		>
 	{/each}
 </nav>

@@ -9,10 +9,13 @@
 		if (!document.startViewTransition) return;
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
+			const t = document.startViewTransition(async () => {
 				resolve();
 				await navigation.complete;
 			});
+			// A transition can be skipped (e.g. the viewport changes mid-way); that's not an error.
+			t.ready.catch(() => {});
+			t.finished.catch(() => {});
 		});
 	});
 </script>

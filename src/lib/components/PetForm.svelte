@@ -20,7 +20,12 @@
 	} = $props();
 
 	// Local editable copy of the values (re-filled from the server on a failed submit).
-	let v = $derived({ ...values });
+	// Deeply reactive copy, re-filled when the server sends values back (see CareForm).
+	// eslint-disable-next-line svelte/prefer-writable-derived
+	let v = $state({ ...values });
+	$effect(() => {
+		v = { ...values };
+	});
 
 	let preview = $state<string | null>(null);
 	let busy = $state(false);

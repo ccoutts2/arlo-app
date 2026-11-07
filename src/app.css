@@ -54,6 +54,10 @@
 	textarea {
 		font: inherit;
 	}
+	/* Fieldsets default to min-width: min-content, which lets scrollers inside them widen the page. */
+	fieldset {
+		min-width: 0;
+	}
 }
 
 @layer components {
@@ -139,12 +143,16 @@
 	.field {
 		display: grid;
 		gap: 6px;
+		/* Lets fields share a row: date inputs otherwise refuse to shrink and push the page wider. */
+		min-width: 0;
 	}
 	.field label {
 		font-weight: 600;
 		font-size: 0.9375rem;
 	}
 	.field input {
+		width: 100%;
+		min-width: 0;
 		min-height: 52px;
 		padding: 0 16px;
 		border-radius: 14px;

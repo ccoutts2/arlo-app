@@ -7,9 +7,15 @@ export default defineConfig({
 	fullyParallel: false,
 	workers: 1,
 	retries: 0,
+	// Every request round-trips to Neon in London, so allow for the occasional slow response.
+	timeout: 45_000,
+	expect: { timeout: 10_000 },
 	reporter: [['list']],
 	globalTeardown: './e2e/teardown.ts',
-	use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
+	use: {
+		baseURL: 'http://localhost:4173',
+		trace: 'retain-on-failure'
+	},
 	projects: [
 		{ name: 'iphone', use: { ...devices['iPhone 13'], browserName: 'chromium' } },
 		{ name: 'desktop', use: { ...devices['Desktop Chrome'] } }
