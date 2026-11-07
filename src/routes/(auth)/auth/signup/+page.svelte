@@ -1,47 +1,66 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { superForm } from 'sveltekit-superforms';
-	import type { PageProps } from './$types';
+	import Field from '$lib/components/Field.svelte';
 
-	let { data }: PageProps = $props();
-
-	const { form, enhance, message, errors } = superForm(data.form);
+	let { data } = $props();
+	const { form, errors, message, enhance, submitting } = superForm(data.form);
 </script>
 
-<main>
-	<h1>Signup</h1>
+<svelte:head>
+	<title>Create your account · Lead</title>
+	<meta
+		name="description"
+		content="Start a shared log of your dog's care, training and reminders."
+	/>
+</svelte:head>
 
-	<form method="POST" use:enhance>
-		<fieldset>
-			<legend>What is your name</legend>
+<section class="paper tape grid gap-6 p-6" aria-labelledby="h">
+	<div>
+		<h1 id="h" class="text-[2.6rem] leading-[0.9] font-extrabold tracking-[-0.05em]">
+			Start your sheet
+		</h1>
+		<p class="mt-2 text-muted">
+			One place for your dog’s doses, training and notes. Invite your household after.
+		</p>
+	</div>
 
-			<div>
-				<label for="givenName"></label>
-				<input type="text" id="givenName" name="givenName" required bind:value={$form.givenName} />
-			</div>
-			<div>
-				<label for="familyName"></label>
-				<input
-					type="text"
-					id="familyName"
-					name="familyName"
-					required
-					bind:value={$form.familyName}
-				/>
-			</div>
-		</fieldset>
-
-		<div>
-			<label for="email"></label>
-			<input type="email" id="email" name="email" required bind:value={$form.email} />
-		</div>
-
-		<div>
-			<label for="password"></label>
-			<input type="password" id="password" name="password" required bind:value={$form.password} />
-		</div>
-
-		<button type="submit">Create Account</button>
+	<form method="POST" use:enhance class="grid gap-4" novalidate>
+		<Field
+			label="First name"
+			name="givenName"
+			autocomplete="given-name"
+			bind:value={$form.givenName}
+			errors={$errors.givenName}
+			hint="Shown as your initial when you tick a dose."
+		/>
+		<Field
+			label="Email"
+			name="email"
+			type="email"
+			autocomplete="email"
+			inputmode="email"
+			bind:value={$form.email}
+			errors={$errors.email}
+		/>
+		<Field
+			label="Password"
+			name="password"
+			type="password"
+			autocomplete="new-password"
+			bind:value={$form.password}
+			errors={$errors.password}
+			hint="At least 8 characters."
+		/>
+		{#if $message}<p class="font-semibold text-late" role="alert">{$message}</p>{/if}
+		<button class="btn mt-2" disabled={$submitting}>
+			{$submitting ? 'Creating…' : 'Create account'}
+		</button>
 	</form>
-
-	<p>Already have an account? <span><a href="/auth/login">Login</a></span> now.</p>
-</main>
+</section>
+<p class="text-center">
+	Already have an account? <a
+		class="font-bold underline underline-offset-4"
+		href={resolve('/auth/login')}>Log in</a
+	>
+</p>

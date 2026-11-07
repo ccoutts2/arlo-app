@@ -24,3 +24,7 @@ vite.config.ts.timestamp-*
 
 /prisma/src/generated/prisma
 .env*.local
+
+# Prisma client
+/src/lib/server/generated
+.prod-host

@@ -1,88 +1,39 @@
-import { verifyPasswordHash } from '$lib/server/password';
-import prisma from '$lib/server/prisma';
-import type { PageServerLoad } from './$types';
-import { redirect, type Actions } from '@sveltejs/kit';
+import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { z } from 'zod/v4';
-import { createSession, generateSessionToken, setSessionTokenCookie } from '$lib/server/session';
+import prisma from '$lib/server/prisma';
+import { verifyPasswordHash } from '$lib/server/password';
+import { startSession } from '$lib/server/session';
+import { clearFailures, lockedForMinutes, recordFailure } from '$lib/server/throttle';
+import { loginSchema } from '$lib/schemas/auth';
+import type { PageServerLoad } from './$types';
 
-
-const schema = z.object({
-    email: z.email(),
-    password: z.string().min(8, "Password is not long enough.")
-})
-
-
-export const load: PageServerLoad = async ({ locals }) => {
-    const form = await superValidate(zod4(schema));
-
-    if (locals.session !== null && locals.user !== null) {
-        return redirect(302, "/");  
-    }
-
-
-    return {
-        form
-    }
-}
+export const load: PageServerLoad = async () => ({ form: await superValidate(zod4(loginSchema)) });
 
 export const actions = {
-    default: async (event) => {
-        const form = await superValidate(event.request, zod4(schema));
+	default: async (event) => {
+		const form = await superValidate(event.request, zod4(loginSchema));
+		if (!form.valid) return fail(400, { form });
+		const { email, password } = form.data;
 
-        let user;
-        let passwordMatch: boolean = false;
-
-       if (!form.valid) {
-			return message(form, {
-				status: 'invalid',
-				text: 'Form was invalid. Please check the form for errors.'
-			});
+		const minutes = await lockedForMinutes(email);
+		if (minutes > 0) {
+			return message(
+				form,
+				`Too many wrong passwords. Try again in ${minutes} minute${minutes === 1 ? '' : 's'}.`,
+				{ status: 429 }
+			);
 		}
 
-        try {
+		const user = await prisma.user.findUnique({ where: { email } });
+		const ok = user ? await verifyPasswordHash(user.password, password) : false;
+		if (!user || !ok) {
+			await recordFailure(email);
+			return message(form, 'That email and password don’t match.', { status: 400 });
+		}
 
-       user = await prisma.user.findUnique({
-            where: {
-                email: form.data.email
-            }
-        });
-
-        if (user) {
-            passwordMatch = await verifyPasswordHash(user.password, form.data.password);
-        }
-
-        } catch(error) {
-            console.log(error);
-            
-            return message(form,
-				{
-					status: 'error',
-					text: 'Something went wrong. Please try again.'
-				},
-				{
-					status: 500
-				},
-
-            )
-        }
-
-        if (!user || !passwordMatch) {
-            return message(
-                form, 
-                {
-                    status: 'error', 
-                    text: 'Invalid email or password.'
-                }, 
-                { status: 400 }
-            );
-        }
-
-        const sessionToken = await generateSessionToken();
-        const session = await createSession(sessionToken, user.id);
-        await setSessionTokenCookie(event, sessionToken, session!.expiresAt);
-        
-        return redirect(302, "/")
-    }
+		await clearFailures(email);
+		await startSession(event, user.id);
+		redirect(303, '/');
+	}
 } satisfies Actions;
