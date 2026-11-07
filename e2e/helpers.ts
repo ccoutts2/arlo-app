@@ -33,3 +33,28 @@ export async function addDog(
 	await page.waitForURL(/\/pets\/(?!new$)[a-z0-9]+$/);
 	return page.url().split('/').pop()!;
 }
+
+export async function addCare(
+	page: Page,
+	petId: string,
+	o: {
+		preset?: string;
+		title: string;
+		dose?: string;
+		stock?: string;
+		repeat?: string;
+		times?: string[];
+	}
+) {
+	await page.goto(`/pets/${petId}/care/new`);
+	if (o.preset) await page.getByRole('button', { name: new RegExp(o.preset) }).click();
+	await page.getByLabel('Name', { exact: true }).fill(o.title);
+	if (o.dose) await page.getByLabel('Dose', { exact: true }).fill(o.dose);
+	if (o.repeat) await page.getByText(o.repeat, { exact: true }).click();
+	if (o.times) {
+		for (const [i, t] of o.times.entries()) await page.getByLabel(`Time ${i + 1}`).fill(t);
+	}
+	if (o.stock) await page.getByLabel('Doses left (optional)').fill(o.stock);
+	await page.getByRole('button', { name: 'Add to the sheet' }).click();
+	await page.waitForURL(`/pets/${petId}`);
+}

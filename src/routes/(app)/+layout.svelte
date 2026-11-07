@@ -1,7 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import TabBar from '$lib/components/TabBar.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
+
+	// Full-screen tasks (adding, editing, marking a dose) hide the tab bar, like pushed screens in
+	// iOS apps. It also keeps the bar from covering the form's submit button.
+	const focused = $derived(/\/(new|edit)$|\/care\/|^\/o\//.test(page.url.pathname));
 </script>
 
 <a
@@ -11,8 +16,10 @@
 >
 <main
 	id="main"
-	class="mx-auto max-w-[440px] px-4 pt-[max(18px,env(safe-area-inset-top))] pb-[136px]"
+	class="mx-auto max-w-[440px] px-4 pt-[max(18px,env(safe-area-inset-top))] {focused
+		? 'pb-[max(96px,calc(env(safe-area-inset-bottom)+64px))]'
+		: 'pb-[136px]'}"
 >
 	{@render children()}
 </main>
-<TabBar />
+{#if !focused}<TabBar late={data.lateCount} />{/if}

@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { getHousehold } from '$lib/server/household';
+import { lateCount } from '$lib/server/today';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
@@ -7,6 +8,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	const household = await getHousehold(locals.user.id);
 	if (!household) error(500, 'Your account has no household. Please contact support.');
 	return {
+		lateCount: await lateCount(household.id),
 		user: locals.user,
 		household: {
 			id: household.id,

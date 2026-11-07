@@ -23,6 +23,8 @@ model User {
   memberships    HouseholdMember[]
   invitesCreated Invite[]
   filesUploaded  File[]
+  careItems      CareItem[]
+  occurrences    Occurrence[]
 }
 
 model Session {
@@ -115,9 +117,10 @@ model Pet {
   vetPhone   String?
   vetAddress String?
 
-  photoId String? @unique
-  photo   File?   @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
-  files   File[]  @relation("PetFiles")
+  photoId String?    @unique
+  photo   File?      @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  files   File[]     @relation("PetFiles")
+  care    CareItem[]
 
   @@index([householdId])
 }
@@ -145,4 +148,73 @@ model File {
 
   @@index([householdId])
   @@index([petId])
+}
+
+enum CareType {
+  MEDICATION
+  FLEA_TICK
+  WORMING
+  VACCINE
+  APPOINTMENT
+  GROOMING
+  CUSTOM
+}
+
+enum Repeat {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+// Something on the sheet: a med, treatment or appointment, with its repeat pattern.
+// Times are wall-clock "HH:MM" in the household's timezone; doses are generated as Occurrences.
+model CareItem {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  petId       String
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  type  CareType
+  title String
+  dose  String?
+  notes String?
+  stock Int? // tablets/doses left; counts down when given
+
+  repeat         Repeat
+  interval       Int       @default(1) // every N days/weeks/months
+  times          String[] // ["08:00", "20:00"]
+  startDate      DateTime  @db.Date
+  endDate        DateTime? @db.Date
+  active         Boolean   @default(true)
+  generatedUntil DateTime? // occurrences exist up to here
+
+  occurrences Occurrence[]
+
+  @@index([petId])
+}
+
+enum OccurrenceStatus {
+  PENDING
+  DONE
+  SKIPPED
+}
+
+// One due dose or appointment. "Given by" lives here so the whole household sees it.
+model Occurrence {
+  id           String           @id @default(cuid())
+  careItemId   String
+  careItem     CareItem         @relation(fields: [careItemId], references: [id], onDelete: Cascade)
+  dueAt        DateTime
+  status       OccurrenceStatus @default(PENDING)
+  snoozedUntil DateTime?
+  doneAt       DateTime?
+  doneById     String?
+  doneBy       User?            @relation(fields: [doneById], references: [id], onDelete: SetNull)
+
+  @@unique([careItemId, dueAt])
+  @@index([dueAt, status])
 }

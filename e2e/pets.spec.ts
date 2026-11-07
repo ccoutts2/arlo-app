@@ -29,7 +29,7 @@ test('add a dog with a photo, see it everywhere', async ({ page }) => {
 	await expect(page.getByRole('link', { name: /Juno/ })).toBeVisible();
 	await page.getByRole('link', { name: 'Today', exact: true }).click();
 	await expect(page.getByRole('link', { name: 'Juno' })).toHaveAttribute('href', `/pets/${id}`);
-	await expect(page.getByText('Nothing due today')).toBeVisible();
+	await expect(page.getByText('Add Juno’s first treatment')).toBeVisible();
 });
 
 test('the dog form explains mistakes and keeps what you typed', async ({ page }) => {
