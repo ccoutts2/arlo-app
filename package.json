@@ -14,7 +14,7 @@
 		"lint": "prettier --check . && eslint .",
 		"db:migrate": "node scripts/guard-dev-db.mjs && prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
-		"postinstall": "prisma generate",
+		"postinstall": "svelte-kit sync && prisma generate",
 		"test:unit": "vitest run",
 		"test:e2e": "node scripts/guard-dev-db.mjs && playwright test",
 		"test": "npm run test:unit && npm run test:e2e",
