@@ -76,10 +76,70 @@
 	{/if}
 </section>
 
-<h2 class="mt-9 mb-3 text-[1.375rem] font-extrabold tracking-tight">On the sheet</h2>
-<div class="rounded-[22px] p-5 shadow-[inset_0_0_0_1.5px_var(--color-line)]">
-	<p class="text-muted">Treatments and reminders for {pet.name} arrive in the next update.</p>
-</div>
+<h2
+	class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
+>
+	On the sheet
+	<a
+		class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"
+		href={resolve(`/pets/${pet.id}/care/new`)}>+ Add</a
+	>
+</h2>
+{#if data.care.length}
+	<ul class="grid gap-2.5">
+		{#each data.care as c (c.id)}
+			<li>
+				<a
+					href={resolve(`/pets/${pet.id}/care/${c.id}`)}
+					class="paper group flex items-center gap-3 px-4 py-3 transition-[translate] duration-300 ease-pen hover:translate-x-1"
+				>
+					<span class="min-w-0 grow">
+						<span class="block truncate font-bold">{c.title}</span>
+						<span class="block text-sm text-muted"
+							>{c.schedule}{c.stock !== null ? ` · ${c.stock} left` : ''}</span
+						>
+					</span>
+					{#if c.next}
+						<span
+							class="hand shrink-0 text-right text-xl leading-tight {c.next.late
+								? 'text-late'
+								: ''}">{c.next.late ? 'late' : c.next.label}</span
+						>
+					{/if}
+				</a>
+			</li>
+		{/each}
+	</ul>
+{:else}
+	<div class="grid gap-3 rounded-[22px] p-5 shadow-[inset_0_0_0_1.5px_var(--color-line)]">
+		<p class="text-muted">
+			Nothing on {pet.name}’s sheet yet. Add their meds, flea and worming treatments or a vet visit.
+		</p>
+		<a class="btn justify-self-start" href={resolve(`/pets/${pet.id}/care/new`)}>Add a treatment</a>
+	</div>
+{/if}
+
+{#if data.history.length}
+	<h2 class="mt-9 mb-3 text-[1.375rem] font-extrabold tracking-tight">Recently given</h2>
+	<ul class="grid gap-2">
+		{#each data.history as h (h.id)}
+			<li
+				class="flex items-center gap-3 rounded-[18px] px-4 py-2.5 shadow-[inset_0_0_0_1.5px_var(--color-line)]"
+			>
+				<span
+					class="hand grid size-9 shrink-0 place-items-center rounded-full bg-ink text-xl text-paper"
+					aria-hidden="true">{h.by[0]}</span
+				>
+				<span class="min-w-0 grow">
+					<span class="block truncate font-semibold">{h.title}</span>
+					<span class="text-sm text-muted"
+						>{h.status === 'DONE' ? 'Given' : 'Skipped'} by {h.by} · {h.when}</span
+					>
+				</span>
+			</li>
+		{/each}
+	</ul>
+{/if}
 
 <h2 class="mt-9 mb-3 text-[1.375rem] font-extrabold tracking-tight">Vet</h2>
 {#if pet.vetName || pet.vetPhone}
