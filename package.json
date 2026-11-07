@@ -17,7 +17,8 @@
 		"postinstall": "prisma generate",
 		"test:unit": "vitest run",
 		"test:e2e": "node scripts/guard-dev-db.mjs && playwright test",
-		"test": "npm run test:unit && npm run test:e2e"
+		"test": "npm run test:unit && npm run test:e2e",
+		"vercel-build": "prisma generate && prisma migrate deploy && vite build"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",

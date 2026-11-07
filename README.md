@@ -28,4 +28,6 @@ npx vercel env pull .env.local   # Development env = the DEV database and dev Bl
 - **lead-prod**: Vercel Production environment.
 - **lead-dev**: Vercel Development and Preview environments, and local `.env.local`.
 
+Vercel runs `npm run vercel-build`, which applies committed migrations with `prisma migrate deploy` (never a reset) before building. Any migration that drops or rewrites data is called out in its PR and needs sign-off before it reaches `main`.
+
 Nothing is ever deleted from production without explicit sign-off.
