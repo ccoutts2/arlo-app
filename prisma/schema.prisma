@@ -19,8 +19,10 @@ model User {
   familyName String?
   password   String
 
-  sessions    Session[]
-  memberships HouseholdMember[]
+  sessions       Session[]
+  memberships    HouseholdMember[]
+  invitesCreated Invite[]
+  filesUploaded  File[]
 }
 
 model Session {
@@ -40,6 +42,9 @@ model Household {
   timezone  String   @default("Europe/London")
 
   members HouseholdMember[]
+  invites Invite[]
+  pets    Pet[]
+  files   File[]
 }
 
 enum HouseholdRole {
@@ -62,8 +67,82 @@ model HouseholdMember {
 
 // Failed sign-in attempts per email, for rate limiting (serverless-safe, no in-memory state).
 model LoginThrottle {
-  email       String   @id
-  failures    Int      @default(0)
-  windowStart DateTime @default(now())
+  email       String    @id
+  failures    Int       @default(0)
+  windowStart DateTime  @default(now())
   lockedUntil DateTime?
+}
+
+// A share link that lets someone join a household. Only the SHA-256 of the token is stored.
+model Invite {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  uses        Int       @default(0)
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([householdId])
+}
+
+enum PetSex {
+  FEMALE
+  MALE
+  UNKNOWN
+}
+
+model Pet {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  name       String
+  breed      String?
+  sex        PetSex    @default(UNKNOWN)
+  birthday   DateTime? @db.Date
+  neutered   Boolean?
+  weightKg   Decimal?  @db.Decimal(5, 2)
+  microchip  String?
+  allergies  String?
+  note       String? // the handwritten line on the name card, e.g. "hates the ear drops"
+  vetName    String?
+  vetPhone   String?
+  vetAddress String?
+
+  photoId String? @unique
+  photo   File?   @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  files   File[]  @relation("PetFiles")
+
+  @@index([householdId])
+}
+
+enum FileKind {
+  PHOTO
+  DOCUMENT
+}
+
+// A file in the private Blob store. Served only through /files/[id] after a household check.
+model File {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  kind         FileKind
+  pathname     String    @unique
+  contentType  String
+  size         Int
+  householdId  String
+  household    Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  petId        String?
+  pet          Pet?      @relation("PetFiles", fields: [petId], references: [id], onDelete: Cascade)
+  photoOf      Pet?      @relation("PetPhoto")
+  uploadedById String?
+  uploadedBy   User?     @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([householdId])
+  @@index([petId])
 }

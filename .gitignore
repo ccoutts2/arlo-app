@@ -28,3 +28,4 @@ vite.config.ts.timestamp-*
 # Prisma client
 /src/lib/server/generated
 .prod-host
+.prod-blob-store

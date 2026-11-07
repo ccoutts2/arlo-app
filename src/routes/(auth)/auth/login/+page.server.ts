@@ -6,6 +6,7 @@ import { verifyPasswordHash } from '$lib/server/password';
 import { startSession } from '$lib/server/session';
 import { clearFailures, lockedForMinutes, recordFailure } from '$lib/server/throttle';
 import { loginSchema } from '$lib/schemas/auth';
+import { acceptInvite } from '$lib/server/invites';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => ({ form: await superValidate(zod4(loginSchema)) });
@@ -34,6 +35,12 @@ export const actions = {
 
 		await clearFailures(email);
 		await startSession(event, user.id);
+		const token = event.url.searchParams.get('invite');
+		if (token) {
+			const joined = await acceptInvite(token, user.id);
+			// If they can't join yet, the join page explains why.
+			redirect(303, joined.ok ? '/household' : `/join/${token}`);
+		}
 		redirect(303, '/');
 	}
 } satisfies Actions;
