@@ -7,6 +7,7 @@ import prisma from './prisma';
 import { bookUpcoming } from './reminders/dispatch';
 import { book, cancel } from './reminders/qstash';
 import { respectQuietHours } from '$lib/quiet';
+import { sendToUsers } from './reminders/push';
 
 const HORIZON_DAYS = 60;
 const TOP_UP_WHEN_DAYS = 30;
@@ -100,6 +101,37 @@ export async function markGiven(occId: string, userId: string) {
 			data: { stock: { decrement: 1 } }
 		})
 	]);
+	await checkRefill(occ.careItemId);
+}
+
+/** Pushes "running low" to the household once, when the doses left reach the item's threshold. */
+export async function checkRefill(careItemId: string) {
+	const item = await prisma.careItem.findUniqueOrThrow({
+		where: { id: careItemId },
+		include: {
+			pet: { include: { household: { include: { members: { select: { userId: true } } } } } }
+		}
+	});
+	if (item.stock === null || item.refillAt === null || item.refillNotifiedAt) return;
+	if (item.stock > item.refillAt) return;
+	await prisma.careItem.update({ where: { id: item.id }, data: { refillNotifiedAt: new Date() } });
+	await sendToUsers(
+		item.pet.household.members.map((m) => m.userId),
+		{
+			title: `${item.title} is running low`,
+			body: `${item.stock} left for ${item.pet.name}. Time to reorder.`,
+			url: `/pets/${item.pet.id}/care/${item.id}`,
+			tag: `refill-${item.id}`
+		}
+	);
+}
+
+/** Adds a new pack to the doses left and re-arms the running-low reminder. */
+export async function restock(careItemId: string, amount: number) {
+	await prisma.careItem.update({
+		where: { id: careItemId },
+		data: { stock: { increment: amount }, refillNotifiedAt: null }
+	});
 }
 
 export async function undo(occId: string) {
@@ -144,6 +176,7 @@ export const emptyCareValues = (startDate: string): CareFormValues => ({
 	dose: '',
 	notes: '',
 	stock: '',
+	refillAt: '',
 	repeat: 'DAILY',
 	interval: '1',
 	times: ['08:00'],
@@ -157,6 +190,7 @@ export const careToValues = (c: CareItem): CareFormValues => ({
 	dose: c.dose ?? '',
 	notes: c.notes ?? '',
 	stock: c.stock?.toString() ?? '',
+	refillAt: c.refillAt?.toString() ?? '',
 	repeat: c.repeat,
 	interval: String(c.interval),
 	times: c.times,
@@ -173,6 +207,9 @@ export async function saveCare(
 	if (!data) return fail(400, { values: raw, errors });
 	const fields = {
 		...data,
+		// A count without a threshold gets the usual "5 left" reminder; changing the count re-arms it.
+		refillAt: data.stock !== null ? (data.refillAt ?? 5) : null,
+		refillNotifiedAt: null,
 		startDate: new Date(data.startDate),
 		endDate: data.endDate ? new Date(data.endDate) : null
 	};

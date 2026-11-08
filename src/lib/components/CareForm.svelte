@@ -231,6 +231,16 @@
 			errors={errors.stock ? [errors.stock] : []}
 			hint="Counts down each time it’s given."
 		/>
+		{#if v.stock}
+			<Field
+				label="Remind everyone when this many are left"
+				name="refillAt"
+				inputmode="numeric"
+				bind:value={v.refillAt}
+				errors={errors.refillAt ? [errors.refillAt] : []}
+				placeholder="5"
+			/>
+		{/if}
 	{/if}
 	<Field
 		label="Notes"

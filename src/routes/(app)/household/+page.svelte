@@ -10,8 +10,9 @@
 	const isOwner = $derived(data.household.role === 'OWNER');
 	const days = (d: Date) => Math.max(1, Math.ceil((new Date(d).getTime() - Date.now()) / 86400000));
 
-	async function share(url: string) {
-		const text = `Join ${data.household.name} on Lead to share our dog’s reminders and log.`;
+	async function share(url: string, message?: string) {
+		const text =
+			message ?? `Join ${data.household.name} on Lead to share our dog’s reminders and log.`;
 		if (navigator.share) {
 			try {
 				await navigator.share({ title: 'Join our household on Lead', text, url });
@@ -142,6 +143,132 @@
 					>
 					<form method="POST" action="?/revoke" use:enhance>
 						<input type="hidden" name="id" value={invite.id} />
+						<button class="rounded-full px-3 py-1.5 font-bold hover:bg-biscuit">Cancel</button>
+					</form>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</section>
+
+<section class="paper mt-8 grid gap-3 p-5" aria-labelledby="cal-h">
+	<h2 id="cal-h" class="text-xl font-extrabold tracking-tight">Calendar</h2>
+	<p class="text-muted">
+		See vet visits, boosters, wormers and other less frequent treatments in Apple Calendar. Daily
+		meds stay in Lead.
+	</p>
+	{#if form && 'webcalUrl' in form}
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<a class="btn" href={form.webcalUrl}>Add to Apple Calendar</a>
+		<label class="field"
+			><span class="text-sm font-semibold">Or paste this into another calendar app</span><input
+				readonly
+				value={form.calendarUrl}
+				onfocus={(e) => e.currentTarget.select()}
+			/></label
+		>
+		<form method="POST" action="?/calendarOff" use:enhance>
+			<button class="btn btn-ghost w-full">Turn off</button>
+		</form>
+	{:else if data.calendarOn}
+		<p class="text-sm font-semibold">Your calendar link is on.</p>
+		<div class="grid grid-cols-2 gap-2.5">
+			<form method="POST" action="?/calendar" use:enhance>
+				<button class="btn btn-ghost w-full">New link</button>
+			</form>
+			<form method="POST" action="?/calendarOff" use:enhance>
+				<button class="btn btn-ghost w-full">Turn off</button>
+			</form>
+		</div>
+	{:else}
+		<form method="POST" action="?/calendar" use:enhance>
+			<button class="btn w-full">Create calendar link</button>
+		</form>
+	{/if}
+</section>
+
+<section class="paper mt-8 grid gap-3 p-5" aria-labelledby="exp-h">
+	<h2 id="exp-h" class="text-xl font-extrabold tracking-tight">Your data</h2>
+	<p class="text-muted">
+		Everything you put in Lead is yours. Download it any time. For a vet-ready summary, open a dog
+		and tap “Summary for the vet”.
+	</p>
+	<div class="grid grid-cols-2 gap-2.5">
+		<a class="btn btn-ghost" href={resolve('/api/export/doses.csv')} download data-sveltekit-reload
+			>Doses (CSV)</a
+		>
+		<a class="btn btn-ghost" href={resolve('/api/export/log.csv')} download data-sveltekit-reload
+			>Log (CSV)</a
+		>
+	</div>
+</section>
+
+<section class="paper mt-8 grid gap-3 p-5" aria-labelledby="sit-h">
+	<h2 id="sit-h" class="text-xl font-extrabold tracking-tight">Sitter link</h2>
+	<p class="text-muted">
+		A private page for a sitter or walker: your dogs, allergies, vet and the next day’s doses, which
+		they can mark given. No account needed.
+	</p>
+	{#if form && 'sitterUrl' in form}
+		<div class="grid gap-2">
+			<label for="sit-url" class="text-sm font-semibold">Link for {form.sitterName}</label>
+			<input
+				id="sit-url"
+				readonly
+				value={form.sitterUrl}
+				class="min-h-12 rounded-xl border-2 border-line bg-paper px-3 text-sm"
+				onfocus={(e) => e.currentTarget.select()}
+			/>
+			<button
+				class="btn"
+				type="button"
+				onclick={() =>
+					form?.sitterUrl &&
+					share(form.sitterUrl, `Here’s how to look after our dogs while we’re away.`)}
+				>{copied ? 'Link copied' : 'Share link'}</button
+			>
+		</div>
+	{:else}
+		<form method="POST" action="?/sitter" use:enhance class="grid gap-3">
+			<label class="field"
+				><span class="text-sm font-semibold">Sitter’s name</span><input
+					name="sitterName"
+					required
+					maxlength="40"
+					placeholder="Emma"
+				/></label
+			>
+			<label class="field"
+				><span class="text-sm font-semibold">Link works for</span>
+				<select
+					name="days"
+					class="min-h-[52px] rounded-[14px] border-2 border-line bg-paper px-3.5"
+				>
+					{#each [[1, '1 day'], [2, '2 days'], [3, '3 days'], [7, 'A week'], [14, 'Two weeks']] as [d, l] (d)}<option
+							value={d}
+							selected={d === 3}>{l}</option
+						>{/each}
+				</select>
+			</label>
+			<button class="btn">Create sitter link</button>
+		</form>
+	{/if}
+	{#if form && 'sitterError' in form}<p class="text-sm font-semibold text-late" role="alert">
+			{form.sitterError}
+		</p>{/if}
+	{#if data.sitterLinks.length}
+		<ul class="mt-1 grid gap-2 text-sm">
+			{#each data.sitterLinks as l (l.id)}
+				<li class="flex items-center justify-between gap-3 border-t border-line pt-2">
+					<span
+						>{l.sitterName} · until {new Date(l.expiresAt).toLocaleDateString('en-GB', {
+							weekday: 'short',
+							day: 'numeric',
+							month: 'short'
+						})}</span
+					>
+					<form method="POST" action="?/revokeSitter" use:enhance>
+						<input type="hidden" name="id" value={l.id} />
 						<button class="rounded-full px-3 py-1.5 font-bold hover:bg-biscuit">Cancel</button>
 					</form>
 				</li>

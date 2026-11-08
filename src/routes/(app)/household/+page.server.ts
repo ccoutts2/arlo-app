@@ -2,6 +2,9 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { requireMember } from '$lib/server/access';
 import { createInvite } from '$lib/server/invites';
+import { createSitterLink } from '$lib/server/sitter';
+import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
+import { sha256 } from '@oslojs/crypto/sha2';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -11,10 +14,56 @@ export const load: PageServerLoad = async ({ locals }) => {
 		orderBy: { createdAt: 'desc' },
 		select: { id: true, expiresAt: true, uses: true, createdBy: { select: { givenName: true } } }
 	});
-	return { invites };
+	const sitterLinks = await prisma.sitterLink.findMany({
+		where: { householdId, revokedAt: null, expiresAt: { gt: new Date() } },
+		orderBy: { createdAt: 'desc' },
+		select: { id: true, sitterName: true, expiresAt: true }
+	});
+	const me = await prisma.user.findUnique({
+		where: { id: locals.user!.id },
+		select: { calendarTokenHash: true }
+	});
+	return { invites, sitterLinks, calendarOn: Boolean(me?.calendarTokenHash) };
 };
 
 export const actions = {
+	calendar: async ({ locals, url }) => {
+		const { user } = await requireMember(locals);
+		const bytes = new Uint8Array(20);
+		crypto.getRandomValues(bytes);
+		const token = encodeBase32LowerCaseNoPadding(bytes);
+		await prisma.user.update({
+			where: { id: user.id },
+			data: { calendarTokenHash: encodeHexLowerCase(sha256(new TextEncoder().encode(token))) }
+		});
+		const feed = `${url.host}/api/calendar/${token}.ics`;
+		return { calendarUrl: `https://${feed}`, webcalUrl: `webcal://${feed}` };
+	},
+	calendarOff: async ({ locals }) => {
+		const { user } = await requireMember(locals);
+		await prisma.user.update({ where: { id: user.id }, data: { calendarTokenHash: null } });
+		return { calendarOff: true };
+	},
+	sitter: async ({ locals, request, url }) => {
+		const { householdId, user } = await requireMember(locals);
+		const f = await request.formData();
+		const name = String(f.get('sitterName') ?? '').trim();
+		const days = Number(f.get('days'));
+		if (!name || name.length > 40) return fail(400, { sitterError: 'Add the sitter’s name.' });
+		if (![1, 2, 3, 7, 14].includes(days))
+			return fail(400, { sitterError: 'Pick how long the link should last.' });
+		const token = await createSitterLink(householdId, user.id, name, days);
+		return { sitterUrl: `${url.origin}/sitter/${token}`, sitterName: name };
+	},
+	revokeSitter: async ({ locals, request }) => {
+		const { householdId } = await requireMember(locals);
+		const id = String((await request.formData()).get('id') ?? '');
+		await prisma.sitterLink.updateMany({
+			where: { id, householdId },
+			data: { revokedAt: new Date() }
+		});
+		return { sitterRevoked: true };
+	},
 	invite: async ({ locals, url }) => {
 		const { householdId, user } = await requireMember(locals);
 		const { token } = await createInvite(householdId, user.id);

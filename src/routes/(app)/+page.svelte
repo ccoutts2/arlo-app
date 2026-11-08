@@ -96,6 +96,35 @@
 		</section>
 	{/each}
 
+	{#each data.lowStock as item (item.id)}
+		<section
+			class="mt-6 grid gap-3 rounded-[22px] border-2 border-dashed border-late/60 bg-paper p-4"
+			aria-labelledby="low-{item.id}"
+		>
+			<div>
+				<h2 id="low-{item.id}" class="text-lg leading-tight font-extrabold">
+					{item.title} is running low
+				</h2>
+				<p class="text-sm text-muted">
+					<span class="hand text-xl text-late">{item.stock} left</span> for {item.pet.name}. Time to
+					reorder.
+				</p>
+			</div>
+			<form method="POST" action="?/restock" use:enhance class="flex items-end gap-2">
+				<input type="hidden" name="id" value={item.id} />
+				<label class="field grow"
+					><span class="text-sm font-semibold">New pack</span><input
+						name="amount"
+						inputmode="numeric"
+						placeholder="30"
+						required
+					/></label
+				>
+				<button class="btn min-h-[52px] px-5">Restocked</button>
+			</form>
+		</section>
+	{/each}
+
 	{#each data.sheets as sheet (sheet.pet.id)}
 		<h2
 			class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
