@@ -38,7 +38,7 @@
 </div>
 
 <div class="grid min-h-[calc(100svh-230px)] content-center gap-5 py-4">
-	<section class="paper tape p-6" aria-labelledby="dose-h" style:view-transition-name="dose-{d.id}">
+	<section class="paper tape p-6" aria-labelledby="dose-h">
 		<p class="font-semibold text-muted">
 			{d.pet.name} · {d.isToday ? 'due' : `due ${d.dueDay}`}
 			{d.dueTime}

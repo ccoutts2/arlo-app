@@ -17,13 +17,20 @@ export default defineConfig({
 		trace: 'retain-on-failure'
 	},
 	projects: [
-		{ name: 'iphone', use: { ...devices['iPhone 13'], browserName: 'chromium' } },
-		{ name: 'desktop', use: { ...devices['Desktop Chrome'] } }
+		// Tag a test @desktop (server-side, run once) or @phone (phone-only behaviour).
+		{
+			name: 'iphone',
+			grepInvert: /@desktop/,
+			use: { ...devices['iPhone 13'], browserName: 'chromium' }
+		},
+		{ name: 'desktop', grepInvert: /@phone/, use: { ...devices['Desktop Chrome'] } }
 	],
 	webServer: {
 		command: 'npm run build && npx vite preview --port 4173',
 		port: 4173,
 		timeout: 240_000,
+		// Trust the fake push service's throwaway certificate (and nothing else extra).
+		env: { NODE_EXTRA_CA_CERTS: 'e2e/.cert/cert.pem' },
 		reuseExistingServer: true
 	}
 });

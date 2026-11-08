@@ -30,7 +30,9 @@ test('no screen scrolls sideways at 320, 375 or 390 px', async ({ page, browser 
 		`/pets/${pet}/edit`,
 		`/pets/${pet}/care/new`,
 		`/o/${occ}`,
-		'/household'
+		'/household',
+		'/household/notifications',
+		'/install'
 	];
 	const cookies = await page.context().cookies();
 

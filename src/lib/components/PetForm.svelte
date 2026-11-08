@@ -124,7 +124,7 @@
 			{ value: 'UNKNOWN', label: 'Skip' }
 		]}
 	/>
-	<div class="grid grid-cols-2 gap-3">
+	<div class="grid gap-5">
 		<Field
 			label="Birthday"
 			name="birthday"

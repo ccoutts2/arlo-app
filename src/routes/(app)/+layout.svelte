@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import TabBar from '$lib/components/TabBar.svelte';
+	import InstallHint from '$lib/components/InstallHint.svelte';
 
 	let { children, data } = $props();
 
@@ -22,4 +23,4 @@
 >
 	{@render children()}
 </main>
-{#if !focused}<TabBar late={data.lateCount} />{/if}
+{#if !focused}<TabBar late={data.lateCount} /><InstallHint />{/if}
