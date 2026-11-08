@@ -123,7 +123,7 @@
 				{#each g.entries as entry (entry.id)}<li class="min-w-0"><EntryCard {entry} /></li>{/each}
 			</ul>
 		{/each}
-	{:else}
+	{:else if !outbox.pending}
 		<section
 			class="mt-8 grid gap-2 rounded-[22px] p-5 shadow-[inset_0_0_0_1.5px_var(--color-line)]"
 		>
