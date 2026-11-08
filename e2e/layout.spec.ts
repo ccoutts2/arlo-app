@@ -32,6 +32,8 @@ test('no screen scrolls sideways at 320, 375 or 390 px', async ({ page, browser 
 		`/o/${occ}`,
 		'/household',
 		'/household/notifications',
+		'/log/new',
+		'/log/session',
 		'/install'
 	];
 	const cookies = await page.context().cookies();

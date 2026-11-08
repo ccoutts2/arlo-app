@@ -189,6 +189,21 @@
 		padding: 12px 16px;
 		line-height: 1.6;
 	}
+	.field textarea {
+		width: 100%;
+		min-width: 0;
+		min-height: 120px;
+		padding: 12px 16px;
+		border-radius: 14px;
+		background: var(--color-paper);
+		border: 2px solid var(--color-line);
+		resize: vertical;
+	}
+	.field textarea:focus-visible {
+		outline: none;
+		border-color: var(--color-ink);
+		box-shadow: 0 0 0 4px rgb(212 236 63 / 0.6);
+	}
 	.field input:hover {
 		border-color: rgb(42 26 16 / 0.35);
 	}

@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			stock: o.careItem.stock,
 			pet: o.careItem.pet,
 			careItemId: o.careItemId,
+			type: o.careItem.type,
 			status: o.status,
 			dueTime: due.time,
 			dueDay: o.dueAt.toLocaleDateString('en-GB', { weekday: 'long', timeZone: tz }),
