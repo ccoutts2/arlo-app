@@ -31,6 +31,14 @@ export const careSchema = z
 				(v) => v === null || (Number.isInteger(v) && v >= 0 && v < 10000),
 				'Use a whole number.'
 			),
+		refillAt: z
+			.string()
+			.trim()
+			.transform((v) => (v === '' ? null : Number(v)))
+			.refine(
+				(v) => v === null || (Number.isInteger(v) && v >= 0 && v < 1000),
+				'Use a whole number.'
+			),
 		repeat: z.enum(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY']),
 		interval: z.coerce
 			.number()
@@ -64,6 +72,7 @@ export function parseCareForm(data: FormData) {
 		dose: String(data.get('dose') ?? ''),
 		notes: String(data.get('notes') ?? ''),
 		stock: String(data.get('stock') ?? ''),
+		refillAt: String(data.get('refillAt') ?? ''),
 		repeat: String(data.get('repeat') ?? 'DAILY'),
 		interval: String(data.get('interval') ?? '1'),
 		times: data.getAll('times').map(String).filter(Boolean),

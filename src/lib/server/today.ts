@@ -85,7 +85,7 @@ export async function buildToday(householdId: string, tz: string, now = new Date
 			late: isLate(o, now),
 			snoozedUntil:
 				o.snoozedUntil && o.snoozedUntil > now ? localParts(o.snoozedUntil, tz).time : null,
-			doneBy: o.doneBy?.givenName ?? null,
+			doneBy: o.doneBy?.givenName ?? o.doneByName ?? null,
 			doneTime: o.doneAt ? localParts(o.doneAt, tz).time : null
 		};
 	});

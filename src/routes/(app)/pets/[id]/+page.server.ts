@@ -5,7 +5,8 @@ import { describe } from '$lib/schedule';
 import { localParts } from '$lib/time';
 import { skillsFor } from '$lib/server/skills';
 import { feed } from '$lib/server/log';
-import type { PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { householdId, tz } = await requireMember(locals);
@@ -28,6 +29,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		orderBy: { doneAt: 'desc' },
 		take: 8,
 		include: { careItem: { select: { title: true } }, doneBy: { select: { givenName: true } } }
+	});
+	const weights = await prisma.weightEntry.findMany({
+		where: { petId: pet.id },
+		orderBy: { at: 'asc' },
+		take: 60
 	});
 	const [skills, recentLog] = await Promise.all([
 		skillsFor(pet.id),
@@ -65,12 +71,34 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			lastPractised: s.lastPractised ? fmtDay(s.lastPractised) : null
 		})),
 		recentLog,
+		weights: weights.map((w) => ({
+			id: w.id,
+			at: w.at.toISOString(),
+			kg: Number(w.kg),
+			label: fmtDay(w.at)
+		})),
 		history: history.map((h) => ({
 			id: h.id,
 			title: h.careItem.title,
 			status: h.status,
-			by: h.doneBy?.givenName ?? 'Someone',
+			by: h.doneBy?.givenName ?? h.doneByName ?? 'Someone',
 			when: h.doneAt ? `${fmtDay(h.doneAt)} at ${localParts(h.doneAt, tz).time}` : ''
 		}))
 	};
 };
+
+export const actions = {
+	weight: async ({ locals, params, request }) => {
+		const { householdId, user } = await requireMember(locals);
+		const pet = await petOr404(householdId, params.id);
+		const kg = Number(String((await request.formData()).get('kg') ?? '').replace(',', '.'));
+		if (!Number.isFinite(kg) || kg <= 0 || kg >= 150)
+			return fail(400, { weightError: 'Enter a weight in kg, like 24.6.' });
+		await prisma.$transaction([
+			prisma.weightEntry.create({ data: { petId: pet.id, kg, byId: user.id } }),
+			// The profile always shows the latest weight.
+			prisma.pet.update({ where: { id: pet.id }, data: { weightKg: kg } })
+		]);
+		return { weighed: true };
+	}
+} satisfies Actions;

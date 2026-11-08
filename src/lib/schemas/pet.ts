@@ -35,6 +35,7 @@ export const petSchema = z.object({
 	),
 	allergies: optionalText(120),
 	note: optionalText(80),
+	sitterNotes: optionalText(500),
 	vetName: optionalText(80),
 	vetPhone: optionalText(30),
 	vetAddress: optionalText(160)

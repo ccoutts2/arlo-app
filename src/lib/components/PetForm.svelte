@@ -173,6 +173,17 @@
 		hint="Written on their card, e.g. “hates the ear drops”."
 	/>
 
+	<div class="field">
+		<label for="f-sitterNotes">Notes for sitters</label>
+		<textarea
+			id="f-sitterNotes"
+			name="sitterNotes"
+			bind:value={v.sitterNotes}
+			placeholder="Feeding, walks, routine, quirks. Shown on the sitter link."
+		></textarea>
+		{#if errors.sitterNotes}<p class="error">{errors.sitterNotes}</p>{/if}
+	</div>
+
 	<fieldset class="paper grid gap-4 p-5">
 		<legend class="sr-only">Vet</legend>
 		<p class="text-lg font-extrabold tracking-tight" aria-hidden="true">Vet</p>
