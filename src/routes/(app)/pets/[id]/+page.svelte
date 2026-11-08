@@ -29,12 +29,10 @@
 			src="/files/{pet.photoId}"
 			alt={pet.name}
 			class="aspect-[4/4.2] w-full rounded-b-none object-cover"
-			style:view-transition-name="pet-photo-{pet.id}"
 		/>
 	{:else}
 		<div
 			class="hand grid aspect-[4/3] w-full place-items-center rounded-b-none bg-ink text-[9rem] text-paper/90"
-			style:view-transition-name="pet-photo-{pet.id}"
 			aria-hidden="true"
 		>
 			{pet.name[0]}
