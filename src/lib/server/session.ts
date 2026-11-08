@@ -72,7 +72,7 @@ export function setSessionTokenCookie(event: RequestEvent, token: string, expire
 	event.cookies.set(SESSION_COOKIE, token, {
 		httpOnly: true,
 		path: '/',
-		secure: !import.meta.env.DEV,
+		secure: event.url.protocol === 'https:', // always true on Vercel
 		sameSite: 'lax',
 		expires: expiresAt
 	});
@@ -82,7 +82,7 @@ export function deleteSessionTokenCookie(event: RequestEvent): void {
 	event.cookies.set(SESSION_COOKIE, '', {
 		httpOnly: true,
 		path: '/',
-		secure: !import.meta.env.DEV,
+		secure: event.url.protocol === 'https:', // always true on Vercel
 		sameSite: 'lax',
 		maxAge: 0
 	});

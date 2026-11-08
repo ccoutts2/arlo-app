@@ -15,11 +15,7 @@ let configured = false;
 function configure() {
 	if (configured) return true;
 	if (!publicEnv.PUBLIC_VAPID_KEY || !env.VAPID_PRIVATE_KEY) return false;
-	setVapidDetails(
-		'mailto:hello@lead.app',
-		publicEnv.PUBLIC_VAPID_KEY,
-		env.VAPID_PRIVATE_KEY
-	);
+	setVapidDetails('mailto:hello@lead.app', publicEnv.PUBLIC_VAPID_KEY, env.VAPID_PRIVATE_KEY);
 	configured = true;
 	return true;
 }
