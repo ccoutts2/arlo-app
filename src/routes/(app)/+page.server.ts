@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { requireMember } from '$lib/server/access';
 import { buildToday } from '$lib/server/today';
+import { feed } from '$lib/server/log';
 import { markGiven, occurrenceOr404, snooze } from '$lib/server/care';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -16,7 +17,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		prisma.careItem.count({ where: { active: true, pet: { householdId } } }),
 		buildToday(householdId, tz)
 	]);
-	return { pets, careCount, ...day };
+	const todayLog = (await feed(householdId, tz, {}, 10)).filter((e) => e.date === day.todayDate);
+	return { pets, careCount, ...day, todayLog };
 };
 
 export const actions = {

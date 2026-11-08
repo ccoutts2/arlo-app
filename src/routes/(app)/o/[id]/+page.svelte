@@ -108,8 +108,17 @@
 			>
 				<button class="btn btn-ghost w-full">Undo</button>
 			</form>
-			<a class="btn w-full" href={resolve('/')}>Back to today</a>
+			{#if d.type === 'TRAINING'}
+				<a class="btn w-full" href="{resolve('/log/session')}?pet={d.pet.id}">Log how it went</a>
+			{:else}
+				<a class="btn w-full" href={resolve('/')}>Back to today</a>
+			{/if}
 		{:else}
+			{#if d.type === 'TRAINING'}
+				<a class="btn btn-ghost w-full" href="{resolve('/log/session')}?pet={d.pet.id}"
+					>Start the session</a
+				>
+			{/if}
 			<form
 				method="POST"
 				action="?/give"
