@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { clearOutbox, outbox, sync } from '$lib/offline/outbox.svelte';
 	import { resolve } from '$app/paths';
 
 	let { data, form } = $props();
@@ -158,7 +159,22 @@
 				{form.leaveError}
 			</p>{/if}
 	{/if}
-	<form method="POST" action="/auth/logout" use:enhance>
+	{#if outbox.pending}
+		<p class="text-sm font-semibold text-late">
+			{outbox.pending} log {outbox.pending === 1 ? 'entry hasn’t' : 'entries haven’t'} synced yet. Logging
+			out now discards {outbox.pending === 1 ? 'it' : 'them'}.
+		</p>
+	{/if}
+	<!-- Logging out clears screens and unsent entries kept on this phone. -->
+	<form
+		method="POST"
+		action="/auth/logout"
+		use:enhance={async () => {
+			await sync();
+			await clearOutbox();
+			navigator.serviceWorker?.controller?.postMessage('clear-pages');
+		}}
+	>
 		<button class="btn btn-ghost w-full">Log out</button>
 	</form>
 </div>

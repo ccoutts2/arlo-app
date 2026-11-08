@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { queue } from '$lib/offline/outbox.svelte';
 	import Field from './Field.svelte';
 	import Chip from './Chip.svelte';
 	import PetAvatar from './PetAvatar.svelte';
@@ -90,11 +93,27 @@
 	enctype="multipart/form-data"
 	class="grid gap-5"
 	novalidate
-	use:enhance={() => {
+	use:enhance={({ formData, action: target, cancel }) => {
+		// No signal: keep the entry on this phone and send it when we're back online.
+		const saveOffline = async () => {
+			const pet = pets.find((p) => p.id === formData.get('petId'));
+			await queue(
+				target.pathname + target.search,
+				formData,
+				`${logTypeLabel[t]} for ${pet?.name ?? 'your dog'}`
+			);
+			await goto(resolve('/log'));
+		};
+		if (!navigator.onLine) {
+			cancel();
+			void saveOffline();
+			return;
+		}
 		submitting = true;
-		return async ({ update }) => {
-			await update({ reset: false });
+		return async ({ result, update }) => {
 			submitting = false;
+			if (result.type === 'error' && !navigator.onLine) return saveOffline();
+			await update({ reset: false });
 		};
 	}}
 >
