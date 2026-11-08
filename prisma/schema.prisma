@@ -19,12 +19,13 @@ model User {
   familyName String?
   password   String
 
-  sessions       Session[]
-  memberships    HouseholdMember[]
-  invitesCreated Invite[]
-  filesUploaded  File[]
-  careItems      CareItem[]
-  occurrences    Occurrence[]
+  sessions          Session[]
+  memberships       HouseholdMember[]
+  invitesCreated    Invite[]
+  filesUploaded     File[]
+  careItems         CareItem[]
+  occurrences       Occurrence[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Session {
@@ -42,6 +43,11 @@ model Household {
   updatedAt DateTime @updatedAt
   name      String
   timezone  String   @default("Europe/London")
+
+  // Pushes that would land in quiet hours wait until they end, unless the dose itself is due then.
+  quietStart      String @default("22:00")
+  quietEnd        String @default("07:00")
+  followUpMinutes Int    @default(120) // nudge again if still not given; 0 = off
 
   members HouseholdMember[]
   invites Invite[]
@@ -215,6 +221,28 @@ model Occurrence {
   doneById     String?
   doneBy       User?            @relation(fields: [doneById], references: [id], onDelete: SetNull)
 
+  // Delivery: the QStash message that will push this dose, and what has been sent (idempotent).
+  messageId    String?
+  notifiedAt   DateTime?
+  followedUpAt DateTime?
+
   @@unique([careItemId, dueAt])
   @@index([dueAt, status])
+}
+
+// One per phone/browser that allowed notifications.
+model PushSubscription {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  label         String? // "iPhone", "Mac" from the user agent
+  lastSuccessAt DateTime?
+  lastErrorAt   DateTime?
+  failures      Int       @default(0)
+
+  @@index([userId])
 }

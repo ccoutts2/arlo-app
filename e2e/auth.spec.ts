@@ -1,17 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { testEmail } from './db';
-import { PASSWORD } from './helpers';
-
-async function signUp(page: Page, name = 'Chris') {
-	const email = testEmail(name.toLowerCase());
-	await page.goto('/auth/signup');
-	await page.getByLabel('First name').fill(name);
-	await page.getByLabel('Email').fill(email);
-	await page.getByLabel('Password').fill(PASSWORD);
-	await page.getByRole('button', { name: 'Create account' }).click();
-	await expect(page).toHaveURL('/');
-	return email;
-}
+import { expect, test } from '@playwright/test';
+import { PASSWORD, signUp } from './helpers';
 
 test('signed-out visitors are sent to log in', async ({ page }) => {
 	await page.goto('/');

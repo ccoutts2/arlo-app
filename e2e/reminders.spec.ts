@@ -25,9 +25,11 @@ test('add a twice-daily medicine from a preset', async ({ page }) => {
 	).toBeVisible();
 	await page.getByRole('link', { name: 'Today', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'This week’s sheet' })).toBeVisible();
-	const rows = page.getByRole('rowheader');
-	await expect(rows.filter({ hasText: '08:00' })).toContainText('Apoquel');
-	await expect(rows.filter({ hasText: '20:00' })).toContainText('Apoquel');
+	// Which rows appear depends on what's left of this week (e.g. on a Sunday afternoon only
+	// 20:00 remains), so check the sheet has Apoquel rows at the scheduled times only.
+	const rows = page.getByRole('rowheader').filter({ hasText: 'Apoquel' });
+	await expect(rows.first()).toBeVisible();
+	for (const text of await rows.allTextContents()) expect(text).toMatch(/08:00|20:00/);
 });
 
 test('the care form explains mistakes', async ({ page }) => {
