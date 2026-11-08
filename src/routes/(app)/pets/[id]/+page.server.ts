@@ -3,6 +3,8 @@ import { petOr404, requireMember } from '$lib/server/access';
 import { patternOf, topUp } from '$lib/server/care';
 import { describe } from '$lib/schedule';
 import { localParts } from '$lib/time';
+import { skillsFor } from '$lib/server/skills';
+import { feed } from '$lib/server/log';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -27,6 +29,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		take: 8,
 		include: { careItem: { select: { title: true } }, doneBy: { select: { givenName: true } } }
 	});
+	const [skills, recentLog] = await Promise.all([
+		skillsFor(pet.id),
+		feed(householdId, tz, { petId: pet.id }, 3)
+	]);
 	const fmtDay = (d: Date) =>
 		d.toLocaleDateString('en-GB', {
 			weekday: 'short',
@@ -54,6 +60,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 					: null
 			};
 		}),
+		skills: skills.map((s) => ({
+			...s,
+			lastPractised: s.lastPractised ? fmtDay(s.lastPractised) : null
+		})),
+		recentLog,
 		history: history.map((h) => ({
 			id: h.id,
 			title: h.careItem.title,

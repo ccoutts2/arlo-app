@@ -26,6 +26,9 @@ model User {
   careItems         CareItem[]
   occurrences       Occurrence[]
   pushSubscriptions PushSubscription[]
+  logEntries        LogEntry[]
+  stepsTicked       SkillStep[]
+  levelChanges      SkillLevelChange[]
 }
 
 model Session {
@@ -127,6 +130,8 @@ model Pet {
   photo   File?      @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
   files   File[]     @relation("PetFiles")
   care    CareItem[]
+  log     LogEntry[]
+  skills  Skill[]
 
   @@index([householdId])
 }
@@ -151,6 +156,8 @@ model File {
   photoOf      Pet?      @relation("PetPhoto")
   uploadedById String?
   uploadedBy   User?     @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  logEntryId   String?
+  logEntry     LogEntry? @relation(fields: [logEntryId], references: [id], onDelete: Cascade)
 
   @@index([householdId])
   @@index([petId])
@@ -163,6 +170,7 @@ enum CareType {
   VACCINE
   APPOINTMENT
   GROOMING
+  TRAINING
   CUSTOM
 }
 
@@ -245,4 +253,96 @@ model PushSubscription {
   failures      Int       @default(0)
 
   @@index([userId])
+}
+
+enum LogType {
+  TRAINING
+  NOTE
+  HEALTH
+  WALK
+}
+
+// The household diary: training sessions, notes, health observations and walks.
+model LogEntry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clientId  String?  @unique // set by the phone so an offline entry is saved once when it syncs
+  petId     String
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  type        LogType
+  occurredAt  DateTime
+  durationMin Int?
+  rating      Int? // 1 rough, 2 OK, 3 great
+  body        String?
+  tags        String[] // health observations: "Itching", "Sickness"…
+
+  skills       LogEntrySkill[]
+  files        File[]
+  levelChanges SkillLevelChange[]
+
+  @@index([petId, occurredAt])
+}
+
+enum SkillLevel {
+  LEARNING
+  GETTING_THERE
+  RELIABLE
+}
+
+model Skill {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  petId     String
+  pet       Pet        @relation(fields: [petId], references: [id], onDelete: Cascade)
+  name      String
+  level     SkillLevel @default(LEARNING)
+
+  steps        SkillStep[]
+  entries      LogEntrySkill[]
+  levelChanges SkillLevelChange[]
+
+  @@unique([petId, name])
+}
+
+// Your own checklist for a skill, e.g. recall: house, then garden, then park on a long line.
+model SkillStep {
+  id       String    @id @default(cuid())
+  skillId  String
+  skill    Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  position Int
+  text     String
+  doneAt   DateTime?
+  doneById String?
+  doneBy   User?     @relation(fields: [doneById], references: [id], onDelete: SetNull)
+
+  @@index([skillId])
+}
+
+model LogEntrySkill {
+  logEntryId String
+  logEntry   LogEntry @relation(fields: [logEntryId], references: [id], onDelete: Cascade)
+  skillId    String
+  skill      Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([logEntryId, skillId])
+}
+
+model SkillLevelChange {
+  id         String     @id @default(cuid())
+  at         DateTime   @default(now())
+  skillId    String
+  skill      Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  from       SkillLevel
+  to         SkillLevel
+  byId       String?
+  by         User?      @relation(fields: [byId], references: [id], onDelete: SetNull)
+  logEntryId String?
+  logEntry   LogEntry?  @relation(fields: [logEntryId], references: [id], onDelete: SetNull)
+
+  @@index([skillId])
 }

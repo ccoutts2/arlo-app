@@ -19,7 +19,7 @@ export function photoProblem(file: File | null): string | null {
 /** Stores a photo in the private Blob store and records it. Call photoProblem() first. */
 export async function savePhoto(
 	file: File,
-	ctx: { householdId: string; petId: string; userId: string }
+	ctx: { householdId: string; petId: string; userId: string; logEntryId?: string }
 ) {
 	const ext = PHOTO_TYPES[file.type];
 	const pathname = `households/${ctx.householdId}/pets/${ctx.petId}/${crypto.randomUUID()}.${ext}`;
@@ -36,6 +36,7 @@ export async function savePhoto(
 			size: file.size,
 			householdId: ctx.householdId,
 			petId: ctx.petId,
+			logEntryId: ctx.logEntryId,
 			uploadedById: ctx.userId
 		}
 	});

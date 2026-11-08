@@ -156,6 +156,51 @@
 		</ul>
 	{/if}
 
+	<h2
+		class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
+	>
+		Today’s log
+		<a
+			class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"
+			href={resolve('/log/session')}>Train</a
+		>
+	</h2>
+	{#if data.todayLog.length}
+		<ul class="grid gap-2">
+			{#each data.todayLog as e (e.id)}
+				<li>
+					<a
+						href={resolve(`/log/${e.id}`)}
+						class="flex items-center gap-3 rounded-[18px] px-4 py-2.5 shadow-[inset_0_0_0_1.5px_var(--color-line)] transition-[translate] duration-300 ease-pen hover:translate-x-1"
+					>
+						<span
+							class="hand grid size-9 shrink-0 place-items-center rounded-full bg-ink text-xl text-paper"
+							aria-hidden="true">{e.author[0]}</span
+						>
+						<span class="min-w-0 grow truncate">
+							<b>{e.author}</b>
+							{e.type === 'TRAINING'
+								? `trained ${e.pet.name}${e.durationMin ? ` for ${e.durationMin} min` : ''}${e.skills.length ? ` · ${e.skills.map((s) => s.name).join(', ')}` : ''}`
+								: e.type === 'WALK'
+									? `walked ${e.pet.name}${e.durationMin ? ` for ${e.durationMin} min` : ''}`
+									: e.type === 'HEALTH'
+										? `noted ${e.tags.join(', ').toLowerCase() || 'a health observation'} for ${e.pet.name}`
+										: `added a note about ${e.pet.name}`}
+						</span>
+						<span class="hand shrink-0 text-xl">{e.time}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<p class="text-muted">
+			Nothing logged yet today. <a
+				class="font-bold text-ink underline underline-offset-4"
+				href={resolve('/log/new')}>Add something</a
+			>
+		</p>
+	{/if}
+
 	<ul class="mt-9 flex flex-wrap gap-2" aria-label="Your dogs">
 		{#each data.pets as pet (pet.id)}
 			<li>

@@ -7,6 +7,7 @@ export type CareTypeKey =
 	| 'VACCINE'
 	| 'APPOINTMENT'
 	| 'GROOMING'
+	| 'TRAINING'
 	| 'CUSTOM';
 
 export const careTypeLabel: Record<CareTypeKey, string> = {
@@ -16,6 +17,7 @@ export const careTypeLabel: Record<CareTypeKey, string> = {
 	VACCINE: 'Vaccine',
 	APPOINTMENT: 'Vet visit',
 	GROOMING: 'Grooming',
+	TRAINING: 'Training',
 	CUSTOM: 'Other'
 };
 
@@ -91,6 +93,16 @@ export const presets: Preset[] = [
 		repeat: 'MONTHLY',
 		interval: 12,
 		times: ['10:00']
+	},
+	{
+		id: 'train',
+		label: 'Daily training',
+		hint: '5 minutes',
+		type: 'TRAINING',
+		title: 'Training session',
+		repeat: 'DAILY',
+		interval: 1,
+		times: ['18:00']
 	},
 	{
 		id: 'vet',

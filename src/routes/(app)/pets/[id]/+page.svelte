@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { age, sexLabel } from '$lib/format';
+	import { levelLabel } from '$lib/log';
+	import EntryCard from '$lib/components/EntryCard.svelte';
 
 	let { data } = $props();
 	const pet = $derived(data.pet);
@@ -115,6 +117,79 @@
 		</p>
 		<a class="btn justify-self-start" href={resolve(`/pets/${pet.id}/care/new`)}>Add a treatment</a>
 	</div>
+{/if}
+
+<h2
+	class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
+>
+	Skills
+	<a
+		class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"
+		href="{resolve('/log/session')}?pet={pet.id}">Train now</a
+	>
+</h2>
+{#if data.skills.length}
+	<ul class="grid gap-2.5">
+		{#each data.skills as s (s.id)}
+			<li>
+				<a
+					href={resolve(`/pets/${pet.id}/skills/${s.id}`)}
+					class="paper group grid gap-2 px-4 py-3 transition-[translate] duration-300 ease-pen hover:translate-x-1"
+				>
+					<span class="flex items-center justify-between gap-3">
+						<span class="font-bold">{s.name}</span>
+						<span
+							class="rounded-full px-2.5 py-1 text-xs font-bold {s.level === 'RELIABLE'
+								? 'bg-ink text-tennis'
+								: s.level === 'GETTING_THERE'
+									? 'bg-tennis'
+									: 'bg-biscuit/70'}">{levelLabel[s.level]}</span
+						>
+					</span>
+					<!-- Three-step level track -->
+					<span class="grid grid-cols-3 gap-1" aria-hidden="true">
+						{#each ['LEARNING', 'GETTING_THERE', 'RELIABLE'] as l, i (l)}
+							<span
+								class="h-1.5 rounded-full {i <=
+								['LEARNING', 'GETTING_THERE', 'RELIABLE'].indexOf(s.level)
+									? 'bg-ink'
+									: 'bg-line'}"
+							></span>
+						{/each}
+					</span>
+					<span class="text-sm text-muted">
+						{s.sessions
+							? `${s.sessions} session${s.sessions === 1 ? '' : 's'} · last ${s.lastPractised}`
+							: 'Not practised yet'}{s.steps ? ` · ${s.stepsDone}/${s.steps} steps` : ''}
+					</span>
+				</a>
+			</li>
+		{/each}
+	</ul>
+{:else}
+	<div class="grid gap-3 rounded-[22px] p-5 shadow-[inset_0_0_0_1.5px_var(--color-line)]">
+		<p class="text-muted">
+			Skills appear here when you log a training session, like recall or loose lead walking.
+		</p>
+		<a class="btn justify-self-start" href="{resolve('/log/session')}?pet={pet.id}"
+			>Start a session</a
+		>
+	</div>
+{/if}
+
+{#if data.recentLog.length}
+	<h2
+		class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
+	>
+		Latest in the log
+		<a
+			class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"
+			href="{resolve('/log')}?pet={pet.id}">All</a
+		>
+	</h2>
+	<ul class="grid gap-2.5">
+		{#each data.recentLog as entry (entry.id)}<li class="min-w-0"><EntryCard {entry} /></li>{/each}
+	</ul>
 {/if}
 
 {#if data.history.length}

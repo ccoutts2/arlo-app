@@ -17,6 +17,7 @@ export const careSchema = z
 			'VACCINE',
 			'APPOINTMENT',
 			'GROOMING',
+			'TRAINING',
 			'CUSTOM'
 		]),
 		title: z.string().trim().min(1, 'Give it a name, like “Apoquel”.').max(60),
