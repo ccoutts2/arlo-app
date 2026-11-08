@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 		const p = localParts(d, tz);
 		const day =
 			p.date === localParts(now, tz).date
-				? 'Today'
+				? 'today'
 				: d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: tz });
 		return `${day} ${p.time}`;
 	};
