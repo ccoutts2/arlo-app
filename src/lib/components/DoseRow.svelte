@@ -16,7 +16,6 @@
 	'PENDING'
 		? 'paper'
 		: 'shadow-[inset_0_0_0_1.5px_var(--color-line)]'}"
-	style:view-transition-name="dose-{dose.id}"
 >
 	<a href={resolve(`/o/${dose.id}`)} class="group flex min-w-0 grow items-center gap-3">
 		<PetAvatar pet={dose.pet} size={40} class="shrink-0" />

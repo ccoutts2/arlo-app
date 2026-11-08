@@ -29,3 +29,10 @@ vite.config.ts.timestamp-*
 /src/lib/server/generated
 .prod-host
 .prod-blob-store
+
+# e2e throwaway TLS cert
+/e2e/.cert
+
+# Playwright output
+/test-results
+/playwright-report

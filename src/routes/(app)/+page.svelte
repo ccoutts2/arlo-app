@@ -73,7 +73,6 @@
 		<section
 			class="paper tape mt-7 grid grid-cols-[64px_1fr] items-center gap-x-3.5 gap-y-3 p-4"
 			aria-labelledby="late-{dose.id}"
-			style:view-transition-name="dose-{dose.id}"
 			out:send={{ key: dose.id }}
 		>
 			<PetAvatar pet={dose.pet} size={64} />

@@ -202,7 +202,7 @@
 		{#if errors.times}<p class="error">{errors.times}</p>{/if}
 	</fieldset>
 
-	<div class="grid grid-cols-2 gap-3">
+	<div class="grid gap-5">
 		<Field
 			label={v.repeat === 'ONCE' ? 'Date' : 'Starting'}
 			name="startDate"

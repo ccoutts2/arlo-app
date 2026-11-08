@@ -3,7 +3,25 @@ import { testEmail } from './db';
 
 export const PASSWORD = 'correct-horse-battery';
 
-export async function signUp(page: Page, name: string, path = '/auth/signup') {
+/**
+ * Signs up a fresh user. Returning users have already seen the one-time Home Screen guide, so it's
+ * marked as seen unless a test is about that guide.
+ */
+export async function signUp(
+	page: Page,
+	name: string,
+	path = '/auth/signup',
+	opts: { installHint?: boolean } = {}
+) {
+	if (!opts.installHint) {
+		await page.addInitScript(() => {
+			try {
+				localStorage.setItem('lead.installHint.v1', 'seen');
+			} catch {
+				/* ignore */
+			}
+		});
+	}
 	const email = testEmail(name.toLowerCase());
 	await page.goto(path);
 	await page.getByLabel('First name').fill(name);

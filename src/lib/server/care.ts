@@ -4,6 +4,9 @@ import type { CareItem } from '$lib/server/generated/prisma/client';
 import { dueTimes, nextDueDate, type SchedulePattern } from '$lib/schedule';
 import { addDays, localParts } from '$lib/time';
 import prisma from './prisma';
+import { bookUpcoming } from './reminders/dispatch';
+import { book, cancel } from './reminders/qstash';
+import { respectQuietHours } from '$lib/quiet';
 
 const HORIZON_DAYS = 60;
 const TOP_UP_WHEN_DAYS = 30;
@@ -43,13 +46,18 @@ export async function generate(item: CareItem, tz: string, from: Date, now = new
 		? new Date(Math.max(horizon.getTime(), due[due.length - 1].getTime()))
 		: horizon;
 	await prisma.careItem.update({ where: { id: item.id }, data: { generatedUntil: until } });
+	await bookUpcoming({ careItemId: item.id });
 }
 
 /** After an edit: future undone doses are replaced; history (given/skipped) is kept. */
 export async function regenerate(item: CareItem, tz: string, now = new Date()) {
-	await prisma.occurrence.deleteMany({
-		where: { careItemId: item.id, status: 'PENDING', dueAt: { gte: now } }
+	const future = { careItemId: item.id, status: 'PENDING' as const, dueAt: { gte: now } };
+	const booked = await prisma.occurrence.findMany({
+		where: { ...future, messageId: { not: null } },
+		select: { messageId: true }
 	});
+	await cancel(booked.map((o) => o.messageId));
+	await prisma.occurrence.deleteMany({ where: future });
 	if (item.active) await generate(item, tz, now, now);
 }
 
@@ -112,11 +120,17 @@ export async function undo(occId: string) {
 	]);
 }
 
-export const snooze = (occId: string, minutes = 30) =>
-	prisma.occurrence.update({
+/** Snoozes a dose for everyone and books a reminder for when the snooze ends (quiet hours respected). */
+export async function snooze(occId: string, minutes = 30) {
+	const until = new Date(Date.now() + minutes * 60000);
+	const o = await prisma.occurrence.update({
 		where: { id: occId },
-		data: { snoozedUntil: new Date(Date.now() + minutes * 60000) }
+		data: { snoozedUntil: until },
+		include: { careItem: { include: { pet: { include: { household: true } } } } }
 	});
+	const h = o.careItem.pet.household;
+	await book(o.id, 'snooze', respectQuietHours(until, h.timezone, h.quietStart, h.quietEnd));
+}
 
 export const skip = (occId: string, userId: string) =>
 	prisma.occurrence.update({

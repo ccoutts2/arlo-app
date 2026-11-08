@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 
 	let { data, form } = $props();
 
@@ -88,6 +89,18 @@
 		</li>
 	{/each}
 </ul>
+
+<a
+	href={resolve('/household/notifications')}
+	class="paper group mt-8 flex items-center justify-between gap-3 px-5 py-4 transition-[translate] duration-300 ease-pen hover:translate-x-1"
+>
+	<span
+		><span class="block font-extrabold">Notifications</span><span class="text-sm text-muted"
+			>Reminders on this phone, quiet hours, follow-ups</span
+		></span
+	>
+	<span aria-hidden="true" class="text-xl">→</span>
+</a>
 
 <section class="paper tape mt-8 grid gap-3 p-5" aria-labelledby="inv-h">
 	<h2 id="inv-h" class="text-xl font-extrabold tracking-tight">Invite someone</h2>

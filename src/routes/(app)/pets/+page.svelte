@@ -30,7 +30,7 @@
 					href={resolve(`/pets/${pet.id}`)}
 					class="paper group flex items-center gap-4 p-3 pr-5 transition-[translate] duration-300 ease-pen hover:translate-x-1"
 				>
-					<span style:view-transition-name="pet-photo-{pet.id}" class="shrink-0">
+					<span class="shrink-0">
 						<PetAvatar {pet} size={72} />
 					</span>
 					<span class="grow">
