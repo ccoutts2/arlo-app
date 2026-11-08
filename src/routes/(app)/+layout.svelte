@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import TabBar from '$lib/components/TabBar.svelte';
 	import InstallHint from '$lib/components/InstallHint.svelte';
+	import OfflineBar from '$lib/components/OfflineBar.svelte';
 
 	let { children, data } = $props();
 
@@ -21,6 +22,7 @@
 		? 'pb-[max(96px,calc(env(safe-area-inset-bottom)+64px))]'
 		: 'pb-[136px]'}"
 >
+	<OfflineBar />
 	{@render children()}
 </main>
 {#if !focused}<TabBar late={data.lateCount} /><InstallHint />{/if}

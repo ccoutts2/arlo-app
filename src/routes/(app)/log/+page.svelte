@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import EntryCard from '$lib/components/EntryCard.svelte';
+	import { outbox } from '$lib/offline/outbox.svelte';
 	import type { EntryView } from '$lib/server/log';
 
 	let { data } = $props();
@@ -55,6 +56,15 @@
 >
 	Log
 </h1>
+
+{#if outbox.pending}
+	<p role="status" class="paper mt-5 flex items-center gap-3 px-4 py-3 font-semibold">
+		<span class="hand text-2xl">{outbox.pending}</span>
+		{outbox.pending === 1 ? 'entry is' : 'entries are'} saved on this phone, waiting to sync{outbox.syncing
+			? '…'
+			: '.'}
+	</p>
+{/if}
 
 {#if !data.pets.length}
 	<section class="paper tape mt-8 grid gap-4 p-6">

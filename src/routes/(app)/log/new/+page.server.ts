@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	});
 	const clicks = Number(q.get('clicks'));
 	if (clicks > 0) values.body = `${clicks} clicks.`;
-	return { values, ...(await logOptions(householdId)) };
+	return { values, tz, ...(await logOptions(householdId)) };
 };
 
 export const actions = {

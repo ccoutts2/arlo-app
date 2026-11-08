@@ -18,6 +18,8 @@ sw.addEventListener('install', (event) => {
 	);
 });
 
+// A new version clears old assets and saved screens (they point at the old build's files);
+// screens are saved again as they're used online.
 sw.addEventListener('activate', (event) => {
 	event.waitUntil(
 		caches
@@ -38,7 +40,42 @@ sw.addEventListener('fetch', (event) => {
 		event.respondWith(caches.match(request).then((hit) => hit ?? fetch(request)));
 		return;
 	}
-	// Pages and data: always the network, so doses are never stale. Offline logging comes in phase 6.
+	// Pages and their data: network first, so doses are never stale; if there's no signal, the
+	// last copy of that screen is used (query strings ignored, the page fills those in itself).
+	if (isAppPage(url)) {
+		event.respondWith(networkFirst(request));
+	}
+});
+
+const PAGES = 'lead-pages';
+const NO_CACHE = ['/api/', '/auth/', '/files/', '/join/'];
+
+function isAppPage(url: URL) {
+	if (NO_CACHE.some((p) => url.pathname.startsWith(p))) return false;
+	return true;
+}
+
+async function networkFirst(request: Request) {
+	const cache = await caches.open(PAGES);
+	try {
+		const res = await fetch(request);
+		// Only keep good, signed-in pages (a redirect to log in shouldn't be replayed offline).
+		if (res.ok && !res.redirected) await cache.put(request, res.clone());
+		return res;
+	} catch {
+		const hit =
+			(await cache.match(request)) ?? (await cache.match(request, { ignoreSearch: true }));
+		if (hit) return hit;
+		return new Response(
+			'<!doctype html><meta name="viewport" content="width=device-width"><body style="font-family:system-ui;padding:24px;background:#ebc995;color:#2a1a10"><h1>You’re offline</h1><p>Open this screen once with a signal and Lead will keep it for next time.</p><p><a href="/">Back to Today</a></p>',
+			{ status: 503, headers: { 'content-type': 'text/html; charset=utf-8' } }
+		);
+	}
+}
+
+// Logging out wipes saved screens so the next person on this phone can't see them.
+sw.addEventListener('message', (event) => {
+	if (event.data === 'clear-pages') event.waitUntil(caches.delete(PAGES));
 });
 
 // ---- Push notifications ----
