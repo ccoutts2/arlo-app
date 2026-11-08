@@ -13,12 +13,12 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"db:migrate": "node scripts/guard-dev-db.mjs && prisma migrate dev",
-		"db:deploy": "prisma migrate deploy",
+		"db:deploy": "node scripts/migrate-deploy.mjs",
 		"postinstall": "svelte-kit sync && prisma generate",
 		"test:unit": "vitest run",
 		"test:e2e": "node scripts/guard-dev-db.mjs && node scripts/test-cert.mjs && playwright test",
 		"test": "npm run test:unit && npm run test:e2e",
-		"vercel-build": "prisma generate && prisma migrate deploy && vite build"
+		"vercel-build": "prisma generate && node scripts/migrate-deploy.mjs && vite build"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
