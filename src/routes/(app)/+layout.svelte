@@ -8,7 +8,7 @@
 
 	// Full-screen tasks (adding, editing, marking a dose) hide the tab bar, like pushed screens in
 	// iOS apps. It also keeps the bar from covering the form's submit button.
-	const focused = $derived(/\/(new|edit)$|\/care\/|^\/o\//.test(page.url.pathname));
+	const focused = $derived(/\/(new|edit|summary)$|\/care\/|^\/o\//.test(page.url.pathname));
 </script>
 
 <a

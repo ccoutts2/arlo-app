@@ -29,6 +29,11 @@ model User {
   logEntries        LogEntry[]
   stepsTicked       SkillStep[]
   levelChanges      SkillLevelChange[]
+  weights           WeightEntry[]
+  sitterLinks       SitterLink[]
+
+  // Private calendar feed (.ics) link; only the hash of the token is stored.
+  calendarTokenHash String? @unique
 }
 
 model Session {
@@ -52,10 +57,11 @@ model Household {
   quietEnd        String @default("07:00")
   followUpMinutes Int    @default(120) // nudge again if still not given; 0 = off
 
-  members HouseholdMember[]
-  invites Invite[]
-  pets    Pet[]
-  files   File[]
+  members     HouseholdMember[]
+  invites     Invite[]
+  pets        Pet[]
+  files       File[]
+  sitterLinks SitterLink[]
 }
 
 enum HouseholdRole {
@@ -126,12 +132,14 @@ model Pet {
   vetPhone   String?
   vetAddress String?
 
-  photoId String?    @unique
-  photo   File?      @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
-  files   File[]     @relation("PetFiles")
-  care    CareItem[]
-  log     LogEntry[]
-  skills  Skill[]
+  photoId     String?       @unique
+  photo       File?         @relation("PetPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  files       File[]        @relation("PetFiles")
+  care        CareItem[]
+  log         LogEntry[]
+  skills      Skill[]
+  weights     WeightEntry[]
+  sitterNotes String? // feeding, routine and quirks, shown on the sitter card
 
   @@index([householdId])
 }
@@ -192,11 +200,13 @@ model CareItem {
   createdById String?
   createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
-  type  CareType
-  title String
-  dose  String?
-  notes String?
-  stock Int? // tablets/doses left; counts down when given
+  type             CareType
+  title            String
+  dose             String?
+  notes            String?
+  stock            Int? // tablets/doses left; counts down when given
+  refillAt         Int? // push "running low" when stock reaches this
+  refillNotifiedAt DateTime?
 
   repeat         Repeat
   interval       Int       @default(1) // every N days/weeks/months
@@ -228,6 +238,7 @@ model Occurrence {
   doneAt       DateTime?
   doneById     String?
   doneBy       User?            @relation(fields: [doneById], references: [id], onDelete: SetNull)
+  doneByName   String? // e.g. a sitter marking it given via their link
 
   // Delivery: the QStash message that will push this dose, and what has been sent (idempotent).
   messageId    String?
@@ -345,4 +356,32 @@ model SkillLevelChange {
   logEntry   LogEntry?  @relation(fields: [logEntryId], references: [id], onDelete: SetNull)
 
   @@index([skillId])
+}
+
+model WeightEntry {
+  id    String   @id @default(cuid())
+  at    DateTime @default(now())
+  kg    Decimal  @db.Decimal(5, 2)
+  petId String
+  pet   Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+  byId  String?
+  by    User?    @relation(fields: [byId], references: [id], onDelete: SetNull)
+
+  @@index([petId, at])
+}
+
+// A private, expiring link for a sitter: read-only card plus marking doses given. No account.
+model SitterLink {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  tokenHash   String    @unique
+  sitterName  String
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([householdId])
 }

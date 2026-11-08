@@ -3,8 +3,10 @@
 	import { age, sexLabel } from '$lib/format';
 	import { levelLabel } from '$lib/log';
 	import EntryCard from '$lib/components/EntryCard.svelte';
+	import WeightChart from '$lib/components/WeightChart.svelte';
+	import { enhance } from '$app/forms';
 
-	let { data } = $props();
+	let { data, form } = $props();
 	const pet = $derived(data.pet);
 
 	const facts = $derived(
@@ -119,6 +121,71 @@
 	</div>
 {/if}
 
+<h2 class="mt-9 mb-3 text-[1.375rem] font-extrabold tracking-tight">Weight</h2>
+<section class="paper grid gap-3 p-4" aria-label="Weight">
+	{#if data.weights.length > 1}
+		{@const change = data.weights.at(-1)!.kg - data.weights.at(-2)!.kg}
+		<WeightChart points={data.weights} />
+		<p class="text-sm text-muted">
+			{change === 0
+				? 'Same as last time'
+				: `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change).toFixed(1)} kg since ${data.weights.at(-2)!.label}`}
+		</p>
+	{:else if data.weights.length === 1}
+		<p>
+			<span class="text-2xl font-extrabold tabular-nums">{data.weights[0].kg} kg</span>
+			<span class="text-sm text-muted"
+				>on {data.weights[0].label}. Add another to see the trend.</span
+			>
+		</p>
+	{:else}
+		<p class="text-muted">
+			Weigh {pet.name} now and then to spot changes early. Handy for dosing by weight, too.
+		</p>
+	{/if}
+	<form
+		method="POST"
+		action="?/weight"
+		use:enhance={() =>
+			async ({ update }) =>
+				update({ reset: true })}
+		class="flex items-end gap-2"
+	>
+		<label class="field grow"
+			><span class="text-sm font-semibold">Weight today (kg)</span><input
+				name="kg"
+				inputmode="decimal"
+				placeholder="24.6"
+				required
+			/></label
+		>
+		<button class="btn min-h-[52px] px-5">Add</button>
+	</form>
+	{#if form && 'weightError' in form}<p class="text-sm font-semibold text-late" role="alert">
+			{form.weightError}
+		</p>{/if}
+	{#if data.weights.length > 1}
+		<details>
+			<summary class="cursor-pointer text-sm font-semibold">All weights</summary>
+			<table class="mt-2 w-full text-sm">
+				<thead
+					><tr
+						><th scope="col" class="text-left font-semibold text-muted">Date</th><th
+							scope="col"
+							class="text-right font-semibold text-muted">kg</th
+						></tr
+					></thead
+				>
+				<tbody>
+					{#each [...data.weights].reverse() as w (w.id)}<tr class="border-t border-line"
+							><td class="py-1.5">{w.label}</td><td class="text-right tabular-nums">{w.kg}</td></tr
+						>{/each}
+				</tbody>
+			</table>
+		</details>
+	{/if}
+</section>
+
 <h2
 	class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
 >
@@ -213,6 +280,18 @@
 		{/each}
 	</ul>
 {/if}
+
+<a
+	href={resolve(`/pets/${pet.id}/summary`)}
+	class="paper group mt-9 flex items-center justify-between gap-3 px-5 py-4 transition-[translate] duration-300 ease-pen hover:translate-x-1"
+>
+	<span
+		><span class="block font-extrabold">Summary for the vet</span><span class="text-sm text-muted"
+			>Treatments, what was given, weight and health notes. Print or save as PDF.</span
+		></span
+	>
+	<span aria-hidden="true" class="text-xl">→</span>
+</a>
 
 <h2 class="mt-9 mb-3 text-[1.375rem] font-extrabold tracking-tight">Vet</h2>
 {#if pet.vetName || pet.vetPhone}

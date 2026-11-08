@@ -15,6 +15,7 @@ export const emptyPetValues: PetFormValues = {
 	microchip: '',
 	allergies: '',
 	note: '',
+	sitterNotes: '',
 	vetName: '',
 	vetPhone: '',
 	vetAddress: ''
@@ -30,6 +31,7 @@ export const petToValues = (p: Pet): PetFormValues => ({
 	microchip: p.microchip ?? '',
 	allergies: p.allergies ?? '',
 	note: p.note ?? '',
+	sitterNotes: p.sitterNotes ?? '',
 	vetName: p.vetName ?? '',
 	vetPhone: p.vetPhone ?? '',
 	vetAddress: p.vetAddress ?? ''
