@@ -21,6 +21,9 @@ export default async function teardown() {
 		);
 	await prisma.household.deleteMany({ where: { id: { in: householdIds } } });
 	await prisma.user.deleteMany({ where: { id: { in: users.map((u) => u.id) } } });
+	// Per-person daily map counters for test users (the monthly counter is left alone).
+	for (const u of users)
+		await prisma.mapUsage.deleteMany({ where: { period: { endsWith: `:${u.id}` } } });
 	await prisma.loginThrottle.deleteMany({ where: { email: { endsWith: `@${TEST_DOMAIN}` } } });
 	await prisma.$disconnect();
 	console.log(`teardown: removed ${users.length} test users and ${files.length} files`);

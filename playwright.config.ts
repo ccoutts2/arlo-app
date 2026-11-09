@@ -29,8 +29,9 @@ export default defineConfig({
 		command: 'npm run build && npx vite preview --port 4173',
 		port: 4173,
 		timeout: 240_000,
-		// Trust the fake push service's throwaway certificate (and nothing else extra).
-		env: { NODE_EXTRA_CA_CERTS: 'e2e/.cert/cert.pem' },
+		// Trust the fake push service's certificate; use a dummy Mapbox key (tests block all Mapbox
+		// requests too, so they never use the real allowance).
+		env: { NODE_EXTRA_CA_CERTS: 'e2e/.cert/cert.pem', PUBLIC_MAPBOX_TOKEN: 'pk.e2e-dummy' },
 		reuseExistingServer: true
 	}
 });

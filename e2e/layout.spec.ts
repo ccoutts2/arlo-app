@@ -34,6 +34,8 @@ test('no screen scrolls sideways at 320, 375 or 390 px', async ({ page, browser 
 		'/household/notifications',
 		'/log/new',
 		'/log/session',
+		'/log/places',
+		'/log/places/new',
 		'/install',
 		`/pets/${pet}/summary`
 	];

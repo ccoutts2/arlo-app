@@ -30,6 +30,37 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		take: 8,
 		include: { careItem: { select: { title: true } }, doneBy: { select: { givenName: true } } }
 	});
+	// Walks card: this month's walks and minutes, and the places this dog rated best.
+	const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+	const recentWalks = await prisma.logEntry.findMany({
+		where: {
+			petId: pet.id,
+			type: 'WALK',
+			occurredAt: { gte: new Date(Date.now() - 365 * 86400000) }
+		},
+		select: {
+			occurredAt: true,
+			durationMin: true,
+			rating: true,
+			place: { select: { id: true, name: true } }
+		}
+	});
+	const monthWalks = recentWalks.filter((w) => w.occurredAt >= monthStart);
+	const byPlace = new Map<string, { id: string; name: string; walks: number; good: number }>();
+	for (const w of recentWalks) {
+		if (!w.place) continue;
+		const e = byPlace.get(w.place.id) ?? { ...w.place, walks: 0, good: 0 };
+		e.walks++;
+		if (w.rating === 3) e.good++;
+		byPlace.set(w.place.id, e);
+	}
+	const walkStats = {
+		count: monthWalks.length,
+		minutes: monthWalks.reduce((sum, w) => sum + (w.durationMin ?? 0), 0),
+		favourites: [...byPlace.values()]
+			.sort((a, b) => b.good - a.good || b.walks - a.walks)
+			.slice(0, 3)
+	};
 	const weights = await prisma.weightEntry.findMany({
 		where: { petId: pet.id },
 		orderBy: { at: 'asc' },
@@ -71,6 +102,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			lastPractised: s.lastPractised ? fmtDay(s.lastPractised) : null
 		})),
 		recentLog,
+		walkStats,
 		weights: weights.map((w) => ({
 			id: w.id,
 			at: w.at.toISOString(),

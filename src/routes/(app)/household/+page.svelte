@@ -200,7 +200,21 @@
 		<a class="btn btn-ghost" href={resolve('/api/export/log.csv')} download data-sveltekit-reload
 			>Log (CSV)</a
 		>
+		<a
+			class="btn btn-ghost col-span-2"
+			href={resolve('/api/export/places.csv')}
+			download
+			data-sveltekit-reload>Places (CSV)</a
+		>
 	</div>
+	<p class="text-sm text-muted">
+		Map use this month: {data.mapUsage.maps.used.toLocaleString('en-GB')} of {data.mapUsage.maps.cap.toLocaleString(
+			'en-GB'
+		)} map opens,
+		{data.mapUsage.searches.used.toLocaleString('en-GB')} of {data.mapUsage.searches.cap.toLocaleString(
+			'en-GB'
+		)} searches. Lead pauses the map before it could cost anything.
+	</p>
 </section>
 
 <section class="paper mt-8 grid gap-3 p-5" aria-labelledby="sit-h">

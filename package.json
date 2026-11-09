@@ -62,6 +62,7 @@
 		"@vercel/blob": "^2.8.2",
 		"date-fns": "^4.1.0",
 		"dotenv": "^17.2.3",
+		"mapbox-gl": "^3.34.2",
 		"web-push": "^4.0.0"
 	},
 	"allowScripts": {

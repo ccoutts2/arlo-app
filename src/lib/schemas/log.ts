@@ -24,6 +24,31 @@ export const logSchema = z
 		tags: z.array(z.enum(healthTags as [string, ...string[]])).max(7),
 		skillIds: z.array(z.string()).max(20),
 		newSkills: z.array(z.string().trim().min(1).max(40)).max(10),
+		placeId: z
+			.string()
+			.max(40)
+			.transform((v) => (v === '' ? null : v)),
+		newPlaceName: z
+			.string()
+			.trim()
+			.max(80, 'Keep the place name under 80 characters.')
+			.transform((v) => (v === '' ? null : v)),
+		lat: z
+			.string()
+			.trim()
+			.transform((v) => (v === '' ? null : Number(v)))
+			.refine(
+				(v) => v === null || (Number.isFinite(v) && v >= -90 && v <= 90),
+				'That location looks wrong.'
+			),
+		lng: z
+			.string()
+			.trim()
+			.transform((v) => (v === '' ? null : Number(v)))
+			.refine(
+				(v) => v === null || (Number.isFinite(v) && v >= -180 && v <= 180),
+				'That location looks wrong.'
+			),
 		clientId: z
 			.string()
 			.max(64)
@@ -52,6 +77,10 @@ export type LogFormValues = {
 	newSkills: string[];
 	clientId: string;
 	levels: Record<string, string>;
+	placeId: string;
+	newPlaceName: string;
+	lat: string;
+	lng: string;
 };
 export type LogFormErrors = Partial<Record<keyof LogInput | 'photo', string>>;
 
@@ -71,6 +100,10 @@ export function parseLogForm(f: FormData) {
 			.map((s) => String(s).trim())
 			.filter(Boolean),
 		clientId: String(f.get('clientId') ?? ''),
+		placeId: String(f.get('placeId') ?? ''),
+		newPlaceName: String(f.get('newPlaceName') ?? ''),
+		lat: String(f.get('lat') ?? ''),
+		lng: String(f.get('lng') ?? ''),
 		// level_<skillId> = LEARNING | GETTING_THERE | RELIABLE (only sent when changed)
 		levels: Object.fromEntries(
 			[...f.entries()]
