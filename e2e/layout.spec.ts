@@ -50,8 +50,8 @@ test('no screen scrolls sideways at 320, 375 or 390 px', async ({ page, browser 
 		});
 		await ctx.addCookies(cookies);
 		const p = await ctx.newPage();
-		for (const path of [...paths, '/auth/login', '/auth/signup']) {
-			if (path.startsWith('/auth')) await ctx.clearCookies();
+		for (const path of [...paths, '/welcome', '/auth/login', '/auth/signup']) {
+			if (path.startsWith('/auth') || path === '/welcome') await ctx.clearCookies();
 			await p.goto(path);
 			const docW = await p.evaluate(() => document.documentElement.scrollWidth);
 			expect(docW, `${path} at ${width}px`).toBeLessThanOrEqual(width);
