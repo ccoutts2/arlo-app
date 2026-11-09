@@ -189,6 +189,44 @@
 <h2
 	class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
 >
+	Walks
+	<a
+		class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"
+		href="{resolve('/log/new')}?type=WALK&pet={pet.id}">Log a walk</a
+	>
+</h2>
+<section class="paper grid gap-3 p-4" aria-label="Walks">
+	<p>
+		<span class="text-2xl font-extrabold tabular-nums">{data.walkStats.count}</span>
+		<span class="text-muted"
+			>walk{data.walkStats.count === 1 ? '' : 's'} this month{data.walkStats.minutes
+				? `, ${data.walkStats.minutes} minutes`
+				: ''}</span
+		>
+	</p>
+	{#if data.walkStats.favourites.length}
+		<div>
+			<p class="mb-1.5 text-sm font-semibold">Favourite places</p>
+			<ul class="flex flex-wrap gap-2">
+				{#each data.walkStats.favourites as f (f.id)}
+					<li>
+						<a
+							class="block rounded-full bg-biscuit/50 px-3 py-1.5 text-sm font-semibold hover:bg-tennis"
+							href={resolve(`/log/places/${f.id}`)}>{f.name}{f.good ? ` · 👍 ${f.good}` : ''}</a
+						>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+	<a class="text-sm font-bold underline underline-offset-4" href={resolve('/log/places')}
+		>All places and the wishlist</a
+	>
+</section>
+
+<h2
+	class="mt-9 mb-3 flex items-baseline justify-between text-[1.375rem] font-extrabold tracking-tight"
+>
 	Skills
 	<a
 		class="rounded-full px-3 py-1.5 text-sm font-bold tracking-normal hover:bg-paper"

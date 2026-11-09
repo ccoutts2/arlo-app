@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import PetAvatar from './PetAvatar.svelte';
+	import { walkRating } from '$lib/places';
 	import {
 		levelLabel,
 		logTypeLabel,
@@ -37,11 +38,18 @@
 					aria-hidden="true"
 				></span>{headline}
 			</p>
-			<p class="truncate text-sm text-muted">{entry.pet.name} · {entry.time} · by {entry.author}</p>
+			<p class="truncate text-sm text-muted">
+				{entry.pet.name}{entry.place ? ` · ${entry.place.name}` : ''} · {entry.time} · by {entry.author}
+			</p>
 		</div>
-		{#if entry.rating}<span class="hand shrink-0 text-2xl"
-				>{ratingLabel[entry.rating].toLowerCase()}</span
-			>{/if}
+		{#if entry.rating && entry.type === 'WALK'}
+			<span class="shrink-0 text-sm font-semibold"
+				><span class="text-xl" aria-hidden="true">{walkRating[entry.rating].emoji}</span>
+				{walkRating[entry.rating].label}</span
+			>
+		{:else if entry.rating}
+			<span class="hand shrink-0 text-2xl">{ratingLabel[entry.rating].toLowerCase()}</span>
+		{/if}
 	</header>
 
 	{#if entry.skills.length || entry.tags.length}

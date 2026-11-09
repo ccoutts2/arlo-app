@@ -31,6 +31,7 @@ model User {
   levelChanges      SkillLevelChange[]
   weights           WeightEntry[]
   sitterLinks       SitterLink[]
+  placesAdded       Place[]
 
   // Private calendar feed (.ics) link; only the hash of the token is stored.
   calendarTokenHash String? @unique
@@ -62,6 +63,7 @@ model Household {
   pets        Pet[]
   files       File[]
   sitterLinks SitterLink[]
+  places      Place[]
 }
 
 enum HouseholdRole {
@@ -290,6 +292,8 @@ model LogEntry {
   rating      Int? // 1 rough, 2 OK, 3 great
   body        String?
   tags        String[] // health observations: "Itching", "Sickness"…
+  placeId     String?
+  place       Place?   @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   skills       LogEntrySkill[]
   files        File[]
@@ -384,4 +388,47 @@ model SitterLink {
   createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([householdId])
+}
+
+enum PlaceStatus {
+  WISHLIST
+  BEEN
+}
+
+// A walk spot for the household: somewhere you've been, or a recommendation to try.
+// Coordinates come from a pin the user places or their location, never stored search results.
+model Place {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  householdId   String
+  household     Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdById   String?
+  createdBy     User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  name          String
+  status        PlaceStatus @default(WISHLIST)
+  lat           Float?
+  lng           Float?
+  recommendedBy String?
+  notes         String?
+  tags          String[]
+
+  walks LogEntry[]
+
+  @@index([householdId])
+}
+
+enum MapUsageKind {
+  MAP_LOAD
+  GEOCODE
+}
+
+// Counts Mapbox use so Lead stops well before the free tier. `period` is "2026-11" for the month
+// or "2026-11-09:<userId>" for one person's day.
+model MapUsage {
+  period String
+  kind   MapUsageKind
+  count  Int          @default(0)
+
+  @@id([period, kind])
 }

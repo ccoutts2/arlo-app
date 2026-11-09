@@ -55,6 +55,25 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 				r.doneBy?.givenName ?? r.doneByName
 			])
 		);
+	} else if (params.file === 'places.csv') {
+		const rows = await prisma.place.findMany({
+			where: { householdId },
+			orderBy: { name: 'asc' },
+			include: { _count: { select: { walks: true } } }
+		});
+		csv = toCsv(
+			['Name', 'Status', 'Recommended by', 'Tags', 'Notes', 'Latitude', 'Longitude', 'Walks'],
+			rows.map((r) => [
+				r.name,
+				r.status === 'BEEN' ? 'Been' : 'Wishlist',
+				r.recommendedBy,
+				r.tags.join('; '),
+				r.notes,
+				r.lat,
+				r.lng,
+				r._count.walks
+			])
+		);
 	} else error(404, 'Not found');
 	return new Response(csv, {
 		headers: {
