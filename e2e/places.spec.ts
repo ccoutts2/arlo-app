@@ -33,10 +33,32 @@ test('a walk with a thumbs rating at a new place, using my location', async ({ p
 	await page.getByRole('link', { name: 'Places' }).click();
 	await page.getByRole('link', { name: /Bushy Park/ }).click();
 	await expect(page.getByText('Been', { exact: true }).first()).toBeVisible();
-	await expect(page.getByRole('link', { name: 'Directions' })).toHaveAttribute(
+	// Directions: choose a maps app once, then it's remembered on this phone.
+	await page.getByRole('button', { name: 'Directions' }).click();
+	const sheet = page.getByRole('dialog', { name: 'Directions to Bushy Park' });
+	await expect(sheet.getByRole('link', { name: 'Open in Apple Maps' })).toHaveAttribute(
 		'href',
 		/maps\.apple\.com\/\?daddr=51\.4101\d*,-0\.3374/
 	);
+	await expect(sheet.getByRole('link', { name: 'Open in Waze' })).toHaveAttribute(
+		'href',
+		/waze\.com\/ul\?ll=51\.4101\d*,-0\.3374\d*&navigate=yes/
+	);
+	const google = sheet.getByRole('link', { name: 'Open in Google Maps' });
+	await expect(google).toHaveAttribute(
+		'href',
+		/google\.com\/maps\/dir\/\?api=1&destination=51\.4101/
+	);
+	const popup = page.waitForEvent('popup');
+	await google.click();
+	await (await popup).close();
+	await page.reload();
+	await expect(page.getByRole('link', { name: 'Directions' })).toHaveAttribute(
+		'href',
+		/google\.com\/maps\/dir/
+	);
+	await page.getByRole('button', { name: /Opens Google Maps · change/ }).click();
+	await expect(page.getByRole('dialog', { name: 'Directions to Bushy Park' })).toBeVisible();
 	await expect(page.getByLabel('1 good')).toBeVisible();
 });
 
@@ -105,6 +127,10 @@ test('the map shows place markers once it has a ticket', async ({ page }) => {
 	await prisma.$disconnect();
 	await page.goto('/log/places');
 	await expect(page.getByRole('button', { name: 'Home Park, on the wishlist' })).toBeAttached();
+	// The map must have real height (Mapbox restyles its container; a collapsed one hides everything).
+	expect((await page.getByRole('region', { name: 'Map' }).boundingBox())!.height).toBeGreaterThan(
+		200
+	);
 });
 
 test('the blocker pauses the map at the monthly cap and per person per day @desktop', async ({
