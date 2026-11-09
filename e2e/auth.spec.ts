@@ -1,10 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { PASSWORD, signUp } from './helpers';
 
-test('signed-out visitors are sent to log in', async ({ page }) => {
+test('signed-out visitors see the welcome page, then log in', async ({ page }) => {
 	await page.goto('/');
-	await expect(page).toHaveURL(/\/auth\/login$/);
+	await expect(page).toHaveURL(/\/welcome$/);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Who fed the\s+dog\?/);
+	await page.getByRole('banner').getByRole('link', { name: 'Log in' }).click();
 	await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+	await page.goto('/log');
+	await expect(page).toHaveURL(/\/auth\/login$/);
 });
 
 test('sign-up validates before creating an account', async ({ page }) => {
@@ -60,7 +64,8 @@ test('tabs navigate, household lists you, log out and back in', async ({ page })
 	await page.getByRole('button', { name: 'Log out' }).click();
 	await expect(page).toHaveURL(/\/auth\/login$/);
 	await page.goto('/');
-	await expect(page).toHaveURL(/\/auth\/login$/);
+	await expect(page).toHaveURL(/\/welcome$/);
+	await page.goto('/auth/login');
 
 	await page.getByLabel('Email').fill(email.toUpperCase());
 	await page.getByLabel('Password').fill(PASSWORD);

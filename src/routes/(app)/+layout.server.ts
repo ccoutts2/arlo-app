@@ -3,8 +3,9 @@ import { getHousehold } from '$lib/server/household';
 import { lateCount } from '$lib/server/today';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
-	if (!locals.user) redirect(302, '/auth/login');
+export const load: LayoutServerLoad = async ({ locals, url }) => {
+	// New visitors at the front door see what Lead is; deep links go straight to logging in.
+	if (!locals.user) redirect(302, url.pathname === '/' ? '/welcome' : '/auth/login');
 	const household = await getHousehold(locals.user.id);
 	if (!household) error(500, 'Your account has no household. Please contact support.');
 	return {
