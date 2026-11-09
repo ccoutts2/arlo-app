@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import EntryCard from '$lib/components/EntryCard.svelte';
+	import LogTabs from '$lib/components/LogTabs.svelte';
 	import { outbox } from '$lib/offline/outbox.svelte';
 	import type { EntryView } from '$lib/server/log';
 
@@ -56,6 +57,7 @@
 >
 	Log
 </h1>
+<LogTabs current="diary" />
 
 {#if outbox.pending}
 	<p role="status" class="paper mt-5 flex items-center gap-3 px-4 py-3 font-semibold">

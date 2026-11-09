@@ -3,6 +3,7 @@ import prisma from '$lib/server/prisma';
 import { requireMember } from '$lib/server/access';
 import { createInvite } from '$lib/server/invites';
 import { createSitterLink } from '$lib/server/sitter';
+import { usage } from '$lib/server/maps/usage';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from '@oslojs/encoding';
 import { sha256 } from '@oslojs/crypto/sha2';
 import type { Actions, PageServerLoad } from './$types';
@@ -23,7 +24,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: { id: locals.user!.id },
 		select: { calendarTokenHash: true }
 	});
-	return { invites, sitterLinks, calendarOn: Boolean(me?.calendarTokenHash) };
+	return {
+		invites,
+		sitterLinks,
+		calendarOn: Boolean(me?.calendarTokenHash),
+		mapUsage: { maps: await usage('MAP_LOAD'), searches: await usage('GEOCODE') }
+	};
 };
 
 export const actions = {

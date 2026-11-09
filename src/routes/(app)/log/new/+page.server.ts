@@ -10,7 +10,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		type: q.get('type'),
 		petId: q.get('pet'),
 		duration: q.get('duration'),
-		skills: q.get('skills')
+		skills: q.get('skills'),
+		placeId: q.get('place')
 	});
 	const clicks = Number(q.get('clicks'));
 	if (clicks > 0) values.body = `${clicks} clicks.`;

@@ -10,6 +10,7 @@ export const entryInclude = {
 	author: { select: { id: true, givenName: true } },
 	skills: { include: { skill: { select: { id: true, name: true } } } },
 	files: { select: { id: true }, orderBy: { createdAt: 'asc' as const } },
+	place: { select: { id: true, name: true } },
 	levelChanges: { include: { skill: { select: { name: true } } } }
 };
 
@@ -30,6 +31,7 @@ export function emptyLogValues(
 		petId?: string | null;
 		duration?: string | null;
 		skills?: string | null;
+		placeId?: string | null;
 	}
 ): LogFormValues {
 	const now = localParts(new Date(), tz);
@@ -45,7 +47,11 @@ export function emptyLogValues(
 		skillIds: q.skills ? q.skills.split(',').filter(Boolean) : [],
 		newSkills: [],
 		clientId: '',
-		levels: {}
+		levels: {},
+		placeId: q.placeId ?? '',
+		newPlaceName: '',
+		lat: '',
+		lng: ''
 	};
 }
 
@@ -66,7 +72,11 @@ export function entryToValues(
 		skillIds: e.skills.map((s) => s.skillId),
 		newSkills: [],
 		clientId: e.clientId ?? '',
-		levels: {}
+		levels: {},
+		placeId: e.placeId ?? '',
+		newPlaceName: '',
+		lat: '',
+		lng: ''
 	};
 }
 
@@ -117,7 +127,8 @@ export async function saveEntry(
 		petId: pet.id,
 		occurredAt: zonedToUtc(data.date, data.time, ctx.tz),
 		durationMin: data.type === 'TRAINING' || data.type === 'WALK' ? data.durationMin : null,
-		rating: isTraining ? data.rating : null,
+		rating: isTraining || data.type === 'WALK' ? data.rating : null,
+		placeId: data.type === 'WALK' ? await walkPlace(data, ctx) : null,
 		body: data.body,
 		tags: data.type === 'HEALTH' ? data.tags : []
 	};
@@ -213,7 +224,46 @@ export function toView(e: Awaited<ReturnType<typeof entryOr404>>, tz: string) {
 		tags: e.tags,
 		skills: e.skills.map((s) => s.skill),
 		photos: e.files.map((f) => f.id),
+		place: e.place,
 		levelUps: e.levelChanges.map((c) => ({ skill: c.skill.name, to: c.to }))
 	};
 }
 export type EntryView = ReturnType<typeof toView>;
+
+/**
+ * The place a walk happened: an existing place in the household, or a new one named on the spot
+ * (with the phone's location if given). Walking somewhere on the wishlist moves it to Been.
+ */
+async function walkPlace(
+	data: {
+		placeId: string | null;
+		newPlaceName: string | null;
+		lat: number | null;
+		lng: number | null;
+	},
+	ctx: { householdId: string; userId: string }
+) {
+	if (data.placeId) {
+		const place = await prisma.place.findFirst({
+			where: { id: data.placeId, householdId: ctx.householdId }
+		});
+		if (!place) return null;
+		if (place.status === 'WISHLIST')
+			await prisma.place.update({ where: { id: place.id }, data: { status: 'BEEN' } });
+		return place.id;
+	}
+	if (data.newPlaceName) {
+		const place = await prisma.place.create({
+			data: {
+				householdId: ctx.householdId,
+				createdById: ctx.userId,
+				name: data.newPlaceName,
+				status: 'BEEN',
+				lat: data.lat,
+				lng: data.lng
+			}
+		});
+		return place.id;
+	}
+	return null;
+}

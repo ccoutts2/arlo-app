@@ -24,6 +24,7 @@
 		errors={form?.errors}
 		pets={data.pets}
 		skillsByPet={data.skillsByPet}
+		places={data.places}
 		submitLabel="Save changes"
 		action="?/save"
 	/>

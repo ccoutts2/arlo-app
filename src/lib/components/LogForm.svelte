@@ -4,9 +4,11 @@
 	import { resolve } from '$app/paths';
 	import { queue } from '$lib/offline/outbox.svelte';
 	import Field from './Field.svelte';
+	import MapView from './MapView.svelte';
 	import Chip from './Chip.svelte';
 	import PetAvatar from './PetAvatar.svelte';
 	import { shrinkPhoto } from '$lib/image';
+	import { walkRating } from '$lib/places';
 	import {
 		healthTags,
 		levelLabel,
@@ -21,11 +23,13 @@
 
 	type PetOpt = { id: string; name: string; photoId: string | null };
 	type SkillOpt = { id: string; name: string; level: SkillLevelKey };
+	type PlaceOpt = { id: string; name: string; status: 'WISHLIST' | 'BEEN' };
 	let {
 		values,
 		errors = {},
 		pets,
 		skillsByPet,
+		places = [],
 		submitLabel,
 		action
 	}: {
@@ -33,6 +37,7 @@
 		errors?: LogFormErrors;
 		pets: PetOpt[];
 		skillsByPet: Record<string, SkillOpt[]>;
+		places?: PlaceOpt[];
 		submitLabel: string;
 		action?: string;
 	} = $props();
@@ -55,6 +60,35 @@
 
 	const skills = $derived(skillsByPet[v.petId] ?? []);
 	let newSkill = $state('');
+
+	// Walk place: an existing place, or "somewhere new" with a name and (optionally) the phone's location.
+	let placeQuery = $state('');
+	let somewhereNew = $state(false);
+	let locating = $state(false);
+	let locateError = $state('');
+	const shownPlaces = $derived(
+		places
+			.filter((p) => p.name.toLowerCase().includes(placeQuery.trim().toLowerCase()))
+			.slice(0, placeQuery ? 20 : 8)
+	);
+	function useLocation() {
+		locateError = '';
+		if (!('geolocation' in navigator))
+			return (locateError = 'This phone can’t share its location.');
+		locating = true;
+		navigator.geolocation.getCurrentPosition(
+			(pos) => {
+				v.lat = pos.coords.latitude.toFixed(6);
+				v.lng = pos.coords.longitude.toFixed(6);
+				locating = false;
+			},
+			() => {
+				locating = false;
+				locateError = 'Couldn’t get your location. Check Lead is allowed to use it in Settings.';
+			},
+			{ enableHighAccuracy: true, timeout: 10000 }
+		);
+	}
 	let submitting = $state(false);
 	let preview = $state<string | null>(null);
 	let photoInput: HTMLInputElement;
@@ -278,6 +312,119 @@
 					>
 				{/each}
 			</div>
+		</fieldset>
+	{/if}
+
+	{#if t === 'WALK'}
+		<fieldset>
+			<legend class="mb-2 text-[0.9375rem] font-semibold">How was it?</legend>
+			<div class="grid grid-cols-3 gap-2">
+				{#each [3, 2, 1] as r (r)}
+					<label
+						class="grid cursor-pointer justify-items-center gap-0.5 rounded-2xl border-2 px-1 py-3 text-sm font-semibold transition-[background,border-color,scale] select-none active:scale-95 has-[:checked]:border-ink has-[:checked]:bg-tennis has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-ink {v.rating ===
+						String(r)
+							? ''
+							: 'border-line bg-paper'}"
+					>
+						<input
+							class="sr-only"
+							type="radio"
+							name="rating"
+							value={String(r)}
+							checked={v.rating === String(r)}
+							onchange={() => (v.rating = String(r))}
+						/>
+						<span class="text-2xl" aria-hidden="true">{walkRating[r].emoji}</span>{walkRating[r]
+							.label}
+					</label>
+				{/each}
+			</div>
+		</fieldset>
+
+		<fieldset class="grid gap-2">
+			<legend class="mb-1 text-[0.9375rem] font-semibold">Where?</legend>
+			{#if places.length > 8}
+				<label class="sr-only" for="place-q">Find a place</label>
+				<input
+					id="place-q"
+					bind:value={placeQuery}
+					placeholder="Find a place"
+					class="min-h-12 rounded-[14px] border-2 border-line bg-paper px-4 focus-visible:border-ink focus-visible:outline-none"
+				/>
+			{/if}
+			<div class="flex flex-wrap gap-2">
+				{#each shownPlaces as p (p.id)}
+					<label
+						class="cursor-pointer rounded-full border-2 px-4 py-2.5 font-semibold has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-ink {v.placeId ===
+						p.id
+							? ''
+							: 'border-line bg-paper'}"
+					>
+						<input
+							class="sr-only"
+							type="radio"
+							name="placeId"
+							value={p.id}
+							checked={v.placeId === p.id}
+							onchange={() => ((v.placeId = p.id), (somewhereNew = false))}
+						/>{p.name}{#if p.status === 'WISHLIST'}<span class="ml-1 text-xs font-medium opacity-70"
+								>wishlist</span
+							>{/if}
+					</label>
+				{/each}
+				<label
+					class="cursor-pointer rounded-full border-2 border-dashed px-4 py-2.5 font-semibold has-[:checked]:border-solid has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper {somewhereNew
+						? ''
+						: 'border-ink/40'}"
+				>
+					<input
+						class="sr-only"
+						type="radio"
+						name="placeId"
+						value=""
+						checked={somewhereNew}
+						onchange={() => ((somewhereNew = true), (v.placeId = ''))}
+					/>+ Somewhere new
+				</label>
+			</div>
+			{#if somewhereNew}
+				<div class="paper grid gap-3 p-4">
+					<Field
+						label="Place name"
+						name="newPlaceName"
+						bind:value={v.newPlaceName}
+						errors={errors.newPlaceName ? [errors.newPlaceName] : []}
+						placeholder="Riverside path"
+					/>
+					<MapView
+						pick={{ lat: v.lat, lng: v.lng, set: (lat, lng) => ((v.lat = lat), (v.lng = lng)) }}
+						autoOpen={false}
+						searchable
+						height="h-60"
+					/>
+					<input type="hidden" name="lat" value={v.lat} />
+					<input type="hidden" name="lng" value={v.lng} />
+					{#if v.lat && v.lng}
+						<p class="text-sm font-semibold">
+							Location saved <button
+								type="button"
+								class="ml-1 underline underline-offset-4"
+								onclick={() => ((v.lat = ''), (v.lng = ''))}>Remove</button
+							>
+						</p>
+					{:else}
+						<button
+							type="button"
+							class="btn btn-ghost min-h-12"
+							onclick={useLocation}
+							disabled={locating}>{locating ? 'Finding you…' : 'Use my location'}</button
+						>
+					{/if}
+					{#if locateError}<p class="text-sm font-semibold text-late" role="alert">
+							{locateError}
+						</p>{/if}
+				</div>
+			{/if}
 		</fieldset>
 	{/if}
 
