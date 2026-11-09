@@ -17,10 +17,34 @@ export const walkRating: Record<number, { emoji: string; label: string }> = {
 
 export const placeStatusLabel = { WISHLIST: 'Wishlist', BEEN: 'Been' } as const;
 
-/** Apple Maps directions (opens the Maps app on iPhone). */
-export function directionsUrl(p: { name: string; lat: number | null; lng: number | null }) {
+export type MapsApp = 'apple' | 'google' | 'waze';
+export const mapsAppLabel: Record<MapsApp, string> = {
+	apple: 'Apple Maps',
+	google: 'Google Maps',
+	waze: 'Waze'
+};
+
+/**
+ * Directions links for each maps app. These are the apps' own web links: they open the app when
+ * it's installed and fall back to the website otherwise. Without a pin, they search by name.
+ */
+export function directionsLinks(p: {
+	name: string;
+	lat: number | null;
+	lng: number | null;
+}): Record<MapsApp, string> {
 	const q = encodeURIComponent(p.name);
-	return p.lat !== null && p.lng !== null
-		? `https://maps.apple.com/?daddr=${p.lat},${p.lng}&q=${q}`
-		: `https://maps.apple.com/?q=${q}`;
+	const pinned = p.lat !== null && p.lng !== null;
+	const ll = pinned ? `${p.lat},${p.lng}` : '';
+	return {
+		apple: pinned ? `https://maps.apple.com/?daddr=${ll}&q=${q}` : `https://maps.apple.com/?q=${q}`,
+		google: `https://www.google.com/maps/dir/?api=1&destination=${pinned ? ll : q}`,
+		waze: pinned
+			? `https://waze.com/ul?ll=${ll}&navigate=yes`
+			: `https://waze.com/ul?q=${q}&navigate=yes`
+	};
 }
+
+/** Apple Maps directions (kept for anything that only needs one link). */
+export const directionsUrl = (p: { name: string; lat: number | null; lng: number | null }) =>
+	directionsLinks(p).apple;

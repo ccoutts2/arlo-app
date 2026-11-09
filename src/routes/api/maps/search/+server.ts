@@ -35,7 +35,11 @@ export const GET: RequestHandler = async ({ locals, url, fetch }) => {
 	});
 	const near = url.searchParams.get('near'); // "lng,lat" of the map view, to rank nearby places first
 	if (near && /^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(near)) params.set('proximity', near);
-	const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?${params}`);
+	// The token is restricted to Lead's own addresses; Mapbox checks the Referer, which a server
+	// request doesn't send by itself.
+	const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?${params}`, {
+		headers: { referer: `${url.origin}/` }
+	});
 	if (!res.ok)
 		return json({ results: [], message: 'Search isn’t available right now.' }, { status: 502 });
 	const body = (await res.json()) as { features?: Feature[] };

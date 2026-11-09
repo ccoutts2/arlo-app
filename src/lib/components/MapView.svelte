@@ -201,7 +201,8 @@
 			? 'shadow-[inset_0_0_0_1.5px_var(--color-line)]'
 			: ''}"
 	>
-		<div bind:this={container} class="absolute inset-0" aria-label="Map" role="region"></div>
+		<!-- Mapbox makes the container position:relative, so it needs its own size (not inset-0). Mapbox labels its canvas as the "Map" region. -->
+		<div bind:this={container} class="size-full"></div>
 		{#if mapState === 'loading'}<p
 				class="absolute inset-0 grid place-items-center bg-paper/70 text-sm font-semibold"
 			>
