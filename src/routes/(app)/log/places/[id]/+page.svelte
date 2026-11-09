@@ -4,7 +4,8 @@
 	import EntryCard from '$lib/components/EntryCard.svelte';
 	import PlaceForm from '$lib/components/PlaceForm.svelte';
 	import MapView from '$lib/components/MapView.svelte';
-	import { directionsUrl, placeStatusLabel, walkRating } from '$lib/places';
+	import { placeStatusLabel, walkRating } from '$lib/places';
+	import Directions from '$lib/components/Directions.svelte';
 
 	let { data, form } = $props();
 	const p = $derived(data.place);
@@ -68,10 +69,9 @@
 	{/if}
 	{#if p.notes}<p class="mt-4 whitespace-pre-line">{p.notes}</p>{/if}
 
-	<div class="mt-6 grid grid-cols-2 gap-2.5">
+	<div class="mt-6 grid grid-cols-2 items-start gap-2.5">
 		<a class="btn" href="{resolve('/log/new')}?type=WALK&place={p.id}">Log a walk here</a>
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-		<a class="btn btn-ghost" href={directionsUrl(p)} target="_blank" rel="noopener">Directions</a>
+		<Directions place={p} />
 	</div>
 
 	{#if data.walks.length}
