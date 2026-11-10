@@ -97,6 +97,18 @@ test('wishlist: recommended place becomes Been after a walk there', async ({ pag
 	await expect(
 		page.getByRole('region', { name: 'Walks' }).getByRole('link', { name: /Richmond Park/ })
 	).toBeVisible();
+
+	// A long place name wraps inside the diary card instead of spilling out of it.
+	const prisma = db();
+	await prisma.place.updateMany({
+		where: { name: 'Richmond Park' },
+		data: { name: 'Tower Hamlets Road / Milton Road, round the back of the allotments' }
+	});
+	await prisma.$disconnect();
+	await page.goto('/log');
+	const card = page.getByRole('article', { name: /Walk for Mabel by Sam/ });
+	await expect(card).toContainText('round the back of the allotments');
+	expect(await card.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
 });
 
 test('removing a place keeps the walk', async ({ page }) => {
