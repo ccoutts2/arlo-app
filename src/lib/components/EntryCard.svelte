@@ -26,7 +26,7 @@
 </script>
 
 <article
-	class="paper grid gap-2.5 p-4"
+	class="paper grid grid-cols-[minmax(0,1fr)] gap-2.5 p-4"
 	aria-label="{headline} for {entry.pet.name} by {entry.author}"
 >
 	<header class="flex items-center gap-3">
@@ -38,7 +38,7 @@
 					aria-hidden="true"
 				></span>{headline}
 			</p>
-			<p class="truncate text-sm text-muted">
+			<p class="text-sm text-muted [overflow-wrap:anywhere]">
 				{entry.pet.name}{entry.place ? ` · ${entry.place.name}` : ''} · {entry.time} · by {entry.author}
 			</p>
 		</div>
